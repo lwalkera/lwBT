@@ -1,0 +1,4 @@
+dt/      - Sample LAP and DUN profile control application for the DT role.
+lap/     - Sample LAP profile control application for the LAP and DT role.
+
+See also the FILES file in each subdirectory.

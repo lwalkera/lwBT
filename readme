@@ -1,0 +1,54 @@
+INTRODUCTION
+
+lwBT is a small implementation of the Bluetooth protocol suite developed 
+by Conny Ohult while at Embedded Systems Internet (EIS) lab at Luleå 
+University of Technology. 
+
+lwBT is implemented to transport IP data over Bluetooth by acting as a 
+network interface to lwIP, an open source implementation of the TCP/IP
+protocol suite that was originally written by Adam Dunkels of the
+Swedish Institute of Computer Science. As lwIP, the focus of the lwBT 
+Bluetooth implementation is to reduce the RAM usage while still having 
+a full scale Bluetooth. This making lwBT/lwIP suitable for use in 
+embedded systems with tenths of kilobytes of free RAM and room for 
+around 60 kilobytes of code ROM.
+
+FEATURES
+
+ * L2CAP (Logical Link Control and Adaption Protocol) for higher level 
+   protocol multiplexing, packet segmentation. 
+ * SDP (Service Discovery Protocol) including support for advertising 
+   services in user defined records. 
+ * RFCOMM protocol for serial port emulation. Defines a subset of the 
+   ETSI TS 07.10 standard, with some Bluetooth-specific adaptations. 
+ * PPP (Point to Point Protocol) including support for IPCP. 
+ * HCI (Host Controller Interface) for optionally providing a uniform 
+   interface method to access the lower layers of the Bluetooth Stack 
+   when they are implemented in a Bluetooth host controller (often 
+   referred to as a Bluetooth module). 
+ * Sample LAN access point (LAP profile) and Data Terminal (LAP and 
+   DUN profiles) control applications
+
+LICENSE
+
+lwBT is freely available under a BSD license.
+
+DEVELOPMENT
+
+Hopefully in the near future lwBT development is going to be hosted
+by lwIP's site at Svannah.
+
+DOCUMENTATION
+
+The official lwBT home page:
+  http://www.sm.luth.se/~conny/lwbt/
+
+lwBT contributions developed by Conny Ohult on his own spare time.
+  http://hem.bredband.net/conohu/lwip/
+
+Another official site is also hosted by EISLAB.
+
+The official lwIP home page:
+  http://www.sics.se/~adam/lwip/
+
+Conny Ohult <conny@sm.luth.se>	    

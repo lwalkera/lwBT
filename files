@@ -1,0 +1,7 @@
+src/      - The source code for the lwBT Bluetooth stack.
+doc/      - The documentation for lwBT.
+ports/	  - Sample ports of the Bluetooth HCI transport layer.
+proj/     - Sample lwBT control applications.
+
+Please note that the source code is intended to be used together with lwIP.
+See also the FILES file in each subdirectory.

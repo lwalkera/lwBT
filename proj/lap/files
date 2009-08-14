@@ -1,0 +1,10 @@
+bt_ip_lap.c - Sample LAP and DUN profile control application for the DT
+              and LAP role. Initialises the Host Controller using HCI, 
+	      and then finds and connects to a metwork access point.
+	      After a network connection has been established it 
+              initialises itself to become an LAN Access Point (LAP).
+              The LAP uses NAT to assign private IP address to devices
+              that connect. NAT then translates between the private
+              network and the public network.
+	
+lwbtopts.c  - Sample lwBT configuration.

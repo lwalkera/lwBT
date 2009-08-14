@@ -1,0 +1,5 @@
+bt_ip_dt.c - Sample LAP and DUN profile control application for the DT
+             role. Initialises the Host Controller using HCI, and then
+	     finds and connects to a metwork access point.
+	
+lwbtopts.c - Sample lwBT configuration.

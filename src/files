@@ -1,0 +1,6 @@
+core/     - The core files including protocol implementations, checksum
+            calculation etc.    
+include/  - lwBT include files.
+
+For more information on the various subdirectories, check the FILES
+file in each directory.
