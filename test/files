@@ -1,0 +1,9 @@
+l2cap.c   - Bluetooth L2CAP implementation.	   
+sdp.c     - Bluetooth SDP implemnentation.	    
+rfcomm.c  - Bluetooth RFCOMM implementation.
+ppp.c     - A minimal PPP implementation.
+hci.c     - A Bluetooth HCI implementation.
+fcs.c     - A generic FCS-8 amd FCS-16 implementation. Should be optimized
+            to the architecture lwBT is running on for improved performance.
+memp.c    - A lwIP memory handler implemented for lwBT. Could be merged with
+            the lwIPs memp.c to save code space.
