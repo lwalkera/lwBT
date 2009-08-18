@@ -42,9 +42,9 @@
 
 #include "lwbtopts.h"
 #include "phybusif.h"
-#include "netif/lwbt/hci.h"
-#include "netif/lwbt/l2cap.h"
-#include "netif/lwbt/lwbt_memp.h"
+#include "hci.h"
+#include "l2cap.h"
+#include "lwbt_memp.h"
 #include "lwip/debug.h"
 
 /* The HCI LINK lists. */
