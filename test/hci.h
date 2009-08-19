@@ -37,7 +37,7 @@
 #include "lwip/pbuf.h"
 #include "lwip/err.h"
 
-#include "netif/lwbt/bd_addr.h"
+#include "bd_addr.h"
 
 struct hci_pcb;
 struct hci_link;
@@ -51,7 +51,7 @@ err_t hci_close(struct hci_link *link);
 void hci_reset_all(void);
 void hci_arg(void *arg);
 void hci_cmd_complete(err_t (* cmd_complete)(void *arg, struct hci_pcb *pcb, 
-					     u8_t ogf, u8_t ocf, u8_t result));
+			u8_t ogf, u8_t ocf, u8_t result));
 void hci_pin_req(err_t (* pin_req)(void *arg, struct bd_addr *bdaddr));
 void hci_link_key_not(err_t (* link_key_not)(void *arg, struct bd_addr *bdaddr, u8_t *key));
 void  hci_wlp_complete(err_t (* wlp_complete)(void *arg, struct bd_addr *bdaddr));
@@ -60,15 +60,15 @@ void hci_connection_complete(err_t (* conn_complete)(void *arg, struct bd_addr *
 #define hci_num_acl(pcb) ((pcb)->hc_num_acl)
 #define hci_maxsize(pcb) ((pcb)->maxsize)
 err_t hci_inquiry(u32_t lap, u8_t inq_len, u8_t num_resp, 
-		  err_t (* inq_complete)(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires, 
-					 u16_t result));
+		err_t (* inq_complete)(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires, 
+			u16_t result));
 err_t hci_disconnect(struct bd_addr *bdaddr, u8_t reason);
 err_t hci_pin_code_request_reply(struct bd_addr *bdaddr, u8_t pinlen, u8_t *pincode);
 err_t hci_pin_code_request_neg_reply(struct bd_addr *bdaddr);
 err_t hci_write_stored_link_key(struct bd_addr *bdaddr, u8_t *key);
 err_t hci_change_local_name(u8_t *name, u8_t len);
 err_t hci_sniff_mode(struct bd_addr *bdaddr, u16_t max_interval, u16_t min_interval,  u16_t attempt, 
-		     u16_t timeout);
+		u16_t timeout);
 err_t hci_write_link_policy_settings(struct bd_addr *bdaddr, u16_t link_policy);
 err_t hci_reset(void);
 err_t hci_set_event_filter(u8_t filter_type, u8_t filter_cond_type, u8_t* cond);
@@ -276,107 +276,107 @@ u16_t lp_pdu_maxsize(void);
 #define HCI_R_BD_ADDR_PLEN 4
 
 struct hci_event_hdr {
-  u8_t code; /* Event code */
-  u8_t len;  /* Parameter total length */
+	u8_t code; /* Event code */
+	u8_t len;  /* Parameter total length */
 };
 
 struct hci_acl_hdr {
-  u16_t conhdl_pb_bc; /* Connection handle, packet boundary and broadcast flag
-			 flag */
-  u16_t len; /* length of data */
+	u16_t conhdl_pb_bc; /* Connection handle, packet boundary and broadcast flag
+						   flag */
+	u16_t len; /* length of data */
 };
 
 struct hci_inq_res {
-  struct hci_inq_res *next; /* For the linked list */
-  
-  struct bd_addr bdaddr; /* Bluetooth address of a device found in an inquiry */
-  u8_t cod[3]; /* Class of the remote device */
-  u8_t psrm; /* Page scan repetition mode */
-  u8_t psm; /* Page scan mode */
-  u16_t co; /* Clock offset */
+	struct hci_inq_res *next; /* For the linked list */
+
+	struct bd_addr bdaddr; /* Bluetooth address of a device found in an inquiry */
+	u8_t cod[3]; /* Class of the remote device */
+	u8_t psrm; /* Page scan repetition mode */
+	u8_t psm; /* Page scan mode */
+	u16_t co; /* Clock offset */
 };
 
 struct hci_link {
-  struct hci_link *next; /* For the linked list */
+	struct hci_link *next; /* For the linked list */
 
-  struct bd_addr bdaddr; /* The remote peers Bluetooth address for this connection */
-  u16_t conhdl; /* Connection handle */
+	struct bd_addr bdaddr; /* The remote peers Bluetooth address for this connection */
+	u16_t conhdl; /* Connection handle */
 #if HCI_FLOW_QUEUEING
-  struct pbuf *p;
-  u16_t len;
-  u8_t pb;
+	struct pbuf *p;
+	u16_t len;
+	u8_t pb;
 #endif  
 };
 
 struct hci_pcb {
-  void *callback_arg;
+	void *callback_arg;
 
-  /* Host to host controller flow control */
-  u8_t numcmd; /* Number of command packets that the host controller (Bluetooth module) 
-		  can buffer */
-  u16_t maxsize; /* Maximum length of the data portion of each HCI ACL data packet that the 
-		   Host Controller is able to accept */
-  u16_t hc_num_acl; /* Number of ACL packets that the Bluetooth module can buffer */
+	/* Host to host controller flow control */
+	u8_t numcmd; /* Number of command packets that the host controller (Bluetooth module) 
+					can buffer */
+	u16_t maxsize; /* Maximum length of the data portion of each HCI ACL data packet that the 
+					  Host Controller is able to accept */
+	u16_t hc_num_acl; /* Number of ACL packets that the Bluetooth module can buffer */
 
-  /* Host controller to host flow control */
-  u8_t flow; /* Indicates if host controller to host flow control is on */
-  u16_t host_num_acl; /* Number of ACL packets that we (the host) can buffer */
+	/* Host controller to host flow control */
+	u8_t flow; /* Indicates if host controller to host flow control is on */
+	u16_t host_num_acl; /* Number of ACL packets that we (the host) can buffer */
 
-  struct hci_inq_res *ires; /* Results of an inquiry */
+	struct hci_inq_res *ires; /* Results of an inquiry */
 
-  err_t (* pin_req)(void *arg, struct bd_addr *bdaddr);
-  err_t (* inq_complete)(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires, 
-			 u16_t result);
-  err_t (* rbd_complete)(void *arg, struct bd_addr *bdaddr);
-  err_t (* link_key_not)(void *arg, struct bd_addr *bdaddr, u8_t *key);
-  err_t (* wlp_complete)(void *arg, struct bd_addr *bdaddr);
-  err_t (* conn_complete)(void *arg, struct bd_addr *bdaddr);
-  err_t (* cmd_complete)(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t result);
+	err_t (* pin_req)(void *arg, struct bd_addr *bdaddr);
+	err_t (* inq_complete)(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires, 
+			u16_t result);
+	err_t (* rbd_complete)(void *arg, struct bd_addr *bdaddr);
+	err_t (* link_key_not)(void *arg, struct bd_addr *bdaddr, u8_t *key);
+	err_t (* wlp_complete)(void *arg, struct bd_addr *bdaddr);
+	err_t (* conn_complete)(void *arg, struct bd_addr *bdaddr);
+	err_t (* cmd_complete)(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t result);
 };
 
 #define HCI_EVENT_PIN_REQ(pcb,bdaddr,ret) \
-                         if((pcb)->pin_req != NULL) { \
-                           (ret = (pcb)->pin_req((pcb)->callback_arg,(bdaddr))); \
-                         } else { \
-                           ret = hci_pin_code_request_neg_reply(bdaddr); \
-			 }
+	if((pcb)->pin_req != NULL) { \
+		(ret = (pcb)->pin_req((pcb)->callback_arg,(bdaddr))); \
+	} else { \
+		ret = hci_pin_code_request_neg_reply(bdaddr); \
+	}
 #define HCI_EVENT_LINK_KEY_NOT(pcb,bdaddr,key,ret) \
-                              if((pcb)->link_key_not != NULL) { \
-                                (ret = (pcb)->link_key_not((pcb)->callback_arg,(bdaddr),(key))); \
-                              }
+	if((pcb)->link_key_not != NULL) { \
+		(ret = (pcb)->link_key_not((pcb)->callback_arg,(bdaddr),(key))); \
+	}
 #define HCI_EVENT_INQ_COMPLETE(pcb,result,ret) \
-                              if((pcb)->inq_complete != NULL) \
-                              (ret = (pcb)->inq_complete((pcb)->callback_arg,(pcb),(pcb)->ires,(result)))
+	if((pcb)->inq_complete != NULL) \
+(ret = (pcb)->inq_complete((pcb)->callback_arg,(pcb),(pcb)->ires,(result)))
 #define HCI_EVENT_RBD_COMPLETE(pcb,bdaddr,ret) \
-                              if((pcb)->rbd_complete != NULL) \
-                              (ret = (pcb)->rbd_complete((pcb)->callback_arg,(bdaddr)));
+	if((pcb)->rbd_complete != NULL) \
+(ret = (pcb)->rbd_complete((pcb)->callback_arg,(bdaddr)));
 #define HCI_EVENT_WLP_COMPLETE(pcb,bdaddr,ret) \
-                               if((pcb)->wlp_complete != NULL) \
-                               (ret = (pcb)->wlp_complete((pcb)->callback_arg,(bdaddr)));
+	if((pcb)->wlp_complete != NULL) \
+(ret = (pcb)->wlp_complete((pcb)->callback_arg,(bdaddr)));
 #define HCI_EVENT_CONN_COMPLETE(pcb,bdaddr,ret) \
-                               if((pcb)->conn_complete != NULL) \
-                               (ret = (pcb)->conn_complete((pcb)->callback_arg,(bdaddr)));
+	if((pcb)->conn_complete != NULL) \
+(ret = (pcb)->conn_complete((pcb)->callback_arg,(bdaddr)));
 #define HCI_EVENT_CMD_COMPLETE(pcb,ogf,ocf,result,ret) \
-                              if((pcb)->cmd_complete != NULL) \
-                              (ret = (pcb)->cmd_complete((pcb)->callback_arg,(pcb),(ogf),(ocf),(result)))
+	if((pcb)->cmd_complete != NULL) \
+(ret = (pcb)->cmd_complete((pcb)->callback_arg,(pcb),(ogf),(ocf),(result)))
 
 /* The HCI LINK lists. */
 extern struct hci_link *hci_active_links; /* List of all active HCI LINKs */
 extern struct hci_link *hci_tmp_link; /* Only used for temporary storage. */
-   
+
 #define HCI_REG(links, nlink) do { \
-                            nlink->next = *links; \
-                            *links = nlink; \
-                            } while(0)
+	nlink->next = *links; \
+	*links = nlink; \
+} while(0)
 #define HCI_RMV(links, nlink) do { \
-                            if(*links == nlink) { \
-                               *links = (*links)->next; \
-                            } else for(hci_tmp_link = *links; hci_tmp_link != NULL; hci_tmp_link = hci_tmp_link->next) { \
-                               if(hci_tmp_link->next != NULL && hci_tmp_link->next == nlink) { \
-                                  hci_tmp_link->next = nlink->next; \
-                                  break; \
-                               } \
-                            } \
-                            nlink->next = NULL; \
-                            } while(0)
+	if(*links == nlink) { \
+		*links = (*links)->next; \
+	} else for(hci_tmp_link = *links; hci_tmp_link != NULL; hci_tmp_link = hci_tmp_link->next) { \
+		if(hci_tmp_link->next != NULL && hci_tmp_link->next == nlink) { \
+			hci_tmp_link->next = nlink->next; \
+			break; \
+		} \
+	} \
+	nlink->next = NULL; \
+} while(0)
 #endif /* __HCI_H__ */

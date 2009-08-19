@@ -1,7 +1,7 @@
 ifeq ($(ARMBUILD),1)
-CC=arm-linux-g++
+CC=arm-linux-gcc
 else
-CC=g++
+CC=gcc
 endif
 
 .c.o: 

@@ -36,7 +36,7 @@
 #include "lwbtopts.h"
 
 #if L2CAP_HCI
-#include "netif/lwbt/hci.h"
+#include "lwbt/hci.h"
 #else
 #include "netif/lwbt/bb.h"
 #include "netif/lwbt/lmp.h"

@@ -32,6 +32,8 @@
 
 #ifndef __LWBT_FCS_H__
 #define __LWBT_FCS_H__
+#include "arch/cc.h"
+#include "lwip/pbuf.h"
 
 u8_t fcs8_crc_check(struct pbuf *p, u8_t len, u8_t check_sum);
 u8_t fcs8_crc_calc(struct pbuf *p, u8_t len);

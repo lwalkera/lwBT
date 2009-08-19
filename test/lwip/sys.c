@@ -43,7 +43,6 @@
 #include "lwip/sys.h"
 #include "lwip/def.h"
 #include "lwip/memp.h"
-#include "lwip/tcpip.h"
 
 /**
  * Struct used for sys_sem_wait_timeout() to tell wether the time
