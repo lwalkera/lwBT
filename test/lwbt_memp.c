@@ -30,12 +30,13 @@
  *
  */
 
+#include "lwbtopts.h"
 #include "lwbt_memp.h"
 #include "hci.h"
 #include "l2cap.h"
 #include "sdp.h"
 #include "rfcomm.h"
-#include "lwbtopts.h"
+
 
 #include "lwip/mem.h"
 
