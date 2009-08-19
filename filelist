@@ -3,5 +3,9 @@ lwip/pbuf.c
 lwip/mem.c
 lwip/memp.c
 lwip/stats.c
-fcs.c
-hci.c
+lwbt/fcs.c
+lwbt/lwbt_memp.c
+lwbt/hci.c
+lwbt/uartif.c
+lwbt/l2cap.c
+main.c

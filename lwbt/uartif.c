@@ -37,17 +37,19 @@
  */
 /*-----------------------------------------------------------------------------------*/
 
-#include "lwbtopts.h"
-#include "phybusif.h"
-#include "netif/lwbt/hci.h"
+#include "arch/lwbtopts.h"
+#include "lwbt/phybusif.h"
+#include "lwbt/hci.h"
 #include "lwip/debug.h"
+#include "lwip/mem.h"
 
 #include <unistd.h>
 #include <termios.h>
+#include <stdlib.h>
 #include <fcntl.h>
 
-#define BAUDRATE B57600
-#define SERIALDEVICE "/dev/ttyS0" /* change this to whatever tty you are using */
+#define BAUDRATE B115200
+#define SERIALDEVICE "/dev/ttyUSB1" /* change this to whatever tty you are using */
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
 int fd;

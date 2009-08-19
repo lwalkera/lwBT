@@ -33,13 +33,13 @@
 #ifndef __LWBT_L2CAP_H__
 #define __LWBT_L2CAP_H__
 
-#include "lwbtopts.h"
+#include "arch/lwbtopts.h"
 
 #if L2CAP_HCI
 #include "lwbt/hci.h"
 #else
-#include "netif/lwbt/bb.h"
-#include "netif/lwbt/lmp.h"
+//#include "netif/lwbt/bb.h"
+//#include "netif/lwbt/lmp.h"
 #endif /* L2CAP_HCI_UART */
 
 struct l2cap_pcb;

@@ -31,17 +31,21 @@
  */
 
 
-#include "phybusif.h"
-#include "lwbt_memp.h"
-#include "hci.h"
-#include "l2cap.h"
-#include "sdp.h"
-#include "rfcomm.h"
-#include "ppp.h"
-#include "nat.h"
-
+#include "lwbt/phybusif.h"
+#include "lwbt/lwbt_memp.h"
+#include "lwbt/hci.h"
+#include "lwbt/l2cap.h"
+//#include "sdp.h"
+//#include "rfcomm.h"
+//#include "ppp.h"
+//#include "nat.h"
+#include "lwip/memp.h"
+#include "lwip/mem.h"
+#include "lwip/sys.h"
+#include "lwip/stats.h"
 
 #include <sys/time.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 
@@ -54,6 +58,7 @@ int main(int argc, char **argv)
 	struct timezone tz;
 	u8_t btiptmr = 0;
 
+	sys_init();
 #ifdef PERF
 	perf_init("/tmp/minimal.perf");
 #endif /* PERF */
@@ -61,9 +66,11 @@ int main(int argc, char **argv)
 	stats_init();
 #endif /* STATS */
 
-//	mem_init();
-//	memp_init();
-//	pbuf_init(); 
+	mem_init();
+	memp_init();
+	pbuf_init(); 
+
+
 //	netif_init();
 //	ip_init();
 //	udp_init();
@@ -76,8 +83,8 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 	l2cap_init();
-	sdp_init();
-	rfcomm_init();
+//	sdp_init();
+//	rfcomm_init();
 //	ppp_init();
 	printf("Bluetooth initialized.\n");
 
@@ -92,7 +99,7 @@ int main(int argc, char **argv)
 	gettimeofday(&tcptv, &tz); /* Initialize TCP timer (TCP_TMR_INTERVAL) */
 
 	/* Host controller initialization for DTs according to LAN access point (LAP) and dial up networking (DUN) profile */
-	bt_ip_start(NULL);
+	//bt_ip_start(NULL);
 
 	while(1) {
 		phybusif_input(cb); /* Check for input */
@@ -111,7 +118,7 @@ int main(int argc, char **argv)
 		if((now.tv_sec - bttv.tv_sec) * 1000000 + (now.tv_usec - bttv.tv_usec) >= 1000000) {
 			gettimeofday(&bttv, &tz); /* Restart Bluetooth timer */
 			l2cap_tmr();
-			rfcomm_tmr();
+			//rfcomm_tmr();
 			//ppp_tmr();
 			//nat_tmr();
 			if(++btiptmr == 240) { /* Akes server special */

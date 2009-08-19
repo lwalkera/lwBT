@@ -1,4 +1,4 @@
-CFLAGS = -I. -Iarch -Ilwip -Wall -m32
+CFLAGS = -I. -Wall -m32
 
 all: lwbt.out
 
@@ -15,4 +15,6 @@ lwbt.out: $(sources:.c=.o)
 
 .PHONY: clean
 clean:
-	rm -f *.o *.d *.out lwip/*.o lwip/*.d lwip/*.out
+	rm -f *.o *.d *.out
+	rm -f lwip/*.o lwip/*.d lwip/*.out
+	rm -f lwbt/*.o lwbt/*.d lwbt/*.out

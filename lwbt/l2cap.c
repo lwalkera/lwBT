@@ -39,9 +39,9 @@
  */
 /*-----------------------------------------------------------------------------------*/
 
-#include "netif/lwbt/l2cap.h"
-#include "netif/lwbt/lwbt_memp.h"
-#include "lwbtopts.h"
+#include "lwbt/l2cap.h"
+#include "lwbt/lwbt_memp.h"
+#include "arch/lwbtopts.h"
 #include "lwip/debug.h"
 
 /* Next Identifier to be sent */

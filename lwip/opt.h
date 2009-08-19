@@ -42,7 +42,7 @@
  * Include user defined options first. Anything not defined in these files
  * will be set to standard values. Override anything you dont like!
  */
-#include "lwipopts.h"
+#include "arch/lwipopts.h"
 #include "lwip/debug.h"
 
 /*
@@ -73,6 +73,7 @@
  * one included in your C library
  */
 #ifndef MEMCPY
+#include <string.h>
 #define MEMCPY(dst,src,len)             memcpy(dst,src,len)
 #endif
 
@@ -81,7 +82,17 @@
  * call to memcpy() if the length is known at compile time and is small.
  */
 #ifndef SMEMCPY
+#include <string.h>
 #define SMEMCPY(dst,src,len)            memcpy(dst,src,len)
+#endif
+
+/**
+ * MEMCPY: override this if you have a faster implementation at hand than the
+ * one included in your C library
+ */
+#ifndef MEMSET
+#include <string.h>
+#define MEMSET(dst,val,len)             memset(dst,val,len)
 #endif
 
 /*

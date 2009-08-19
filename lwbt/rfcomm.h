@@ -33,7 +33,7 @@
 #ifndef __LWBT_RFCOMM_H__
 #define __LWBT_RFCOMM_H__
 
-#include "netif/lwbt/l2cap.h"
+#include "lwbt/l2cap.h"
 
 
 //struct rfcomm_pcb;

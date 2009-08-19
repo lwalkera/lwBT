@@ -30,15 +30,14 @@
  *
  */
 
-#include "lwbtopts.h"
-#include "lwbt_memp.h"
-#include "hci.h"
-#include "l2cap.h"
-#include "sdp.h"
-#include "rfcomm.h"
-
-
+#include "arch/lwbtopts.h"
+#include "lwbt/lwbt_memp.h"
+#include "lwbt/hci.h"
+#include "lwbt/l2cap.h"
+#include "lwbt/sdp.h"
+#include "lwbt/rfcomm.h"
 #include "lwip/mem.h"
+#include "lwip/opt.h"
 
 struct memp {
 	struct memp *next;
@@ -58,8 +57,6 @@ static struct memp *memp_tab[MEMP_LWBT_MAX];
 		sizeof(struct sdp_record),
 		sizeof(struct rfcomm_pcb),
 		sizeof(struct rfcomm_pcb_listen),
-		sizeof(struct ppp_pcb),
-		sizeof(struct ppp_req)
 	};
 
 static const u16_t memp_num[MEMP_LWBT_MAX] = {
@@ -74,48 +71,40 @@ static const u16_t memp_num[MEMP_LWBT_MAX] = {
 	MEMP_NUM_SDP_RECORD,
 	MEMP_NUM_RFCOMM_PCB,
 	MEMP_NUM_RFCOMM_PCB_LISTEN,
-	MEMP_NUM_PPP_PCB,
-	MEMP_NUM_PPP_REQ
 };
 
 static u8_t memp_memory[(MEMP_NUM_HCI_PCB *
-		MEM_ALIGN_SIZE(sizeof(struct hci_pcb) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct hci_pcb) +
 			sizeof(struct memp)) +
 		MEMP_NUM_HCI_LINK *
-		MEM_ALIGN_SIZE(sizeof(struct hci_link) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct hci_link) +
 			sizeof(struct memp)) +
 		MEMP_NUM_HCI_INQ *
-		MEM_ALIGN_SIZE(sizeof(struct hci_inq_res) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct hci_inq_res) +
 			sizeof(struct memp)) +
 		MEMP_NUM_L2CAP_PCB *
-		MEM_ALIGN_SIZE(sizeof(struct l2cap_pcb) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct l2cap_pcb) +
 			sizeof(struct memp)) +
 		MEMP_NUM_L2CAP_PCB_LISTEN *
-		MEM_ALIGN_SIZE(sizeof(struct l2cap_pcb_listen) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct l2cap_pcb_listen) +
 			sizeof(struct memp)) +
 		MEMP_NUM_L2CAP_SIG *
-		MEM_ALIGN_SIZE(sizeof(struct l2cap_sig) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct l2cap_sig) +
 			sizeof(struct memp)) +
 		MEMP_NUM_L2CAP_SEG *
-		MEM_ALIGN_SIZE(sizeof(struct l2cap_seg) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct l2cap_seg) +
 			sizeof(struct memp)) +
 		MEMP_NUM_SDP_PCB *
-		MEM_ALIGN_SIZE(sizeof(struct sdp_pcb) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct sdp_pcb) +
 				sizeof(struct memp)) +
 		MEMP_NUM_SDP_RECORD *
-		MEM_ALIGN_SIZE(sizeof(struct sdp_record) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct sdp_record) +
 				sizeof(struct memp)) +
 		MEMP_NUM_RFCOMM_PCB *
-		MEM_ALIGN_SIZE(sizeof(struct rfcomm_pcb) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct rfcomm_pcb) +
 				sizeof(struct memp)) +
 		MEMP_NUM_RFCOMM_PCB_LISTEN *
-		MEM_ALIGN_SIZE(sizeof(struct rfcomm_pcb_listen) +
-				sizeof(struct memp)) +
-		MEMP_NUM_PPP_PCB *
-		MEM_ALIGN_SIZE(sizeof(struct ppp_pcb) +
-				sizeof(struct memp)) +
-		MEMP_NUM_PPP_REQ *
-		MEM_ALIGN_SIZE(sizeof(struct ppp_req) +
+		LWIP_MEM_ALIGN_SIZE(sizeof(struct rfcomm_pcb_listen) +
 				sizeof(struct memp)))];
 
 
@@ -128,13 +117,13 @@ void lwbt_memp_init(void)
 
 	memp = (struct memp *)&memp_memory[0];
 	for(i = 0; i < MEMP_LWBT_MAX; ++i) {
-		size = MEM_ALIGN_SIZE(memp_sizes[i] + sizeof(struct memp));
+		size = LWIP_MEM_ALIGN_SIZE(memp_sizes[i] + sizeof(struct memp));
 		if(memp_num[i] > 0) {
 			memp_tab[i] = memp;
 			m = memp;
 
 			for(j = 0; j < memp_num[i]; ++j) {
-				m->next = (struct memp *)MEM_ALIGN((u8_t *)m + size);
+				m->next = (struct memp *)LWIP_MEM_ALIGN((u8_t *)m + size);
 				memp = m;
 				m = m->next;
 			}
@@ -158,9 +147,9 @@ void * lwbt_memp_malloc(lwbt_memp_t type)
 		memp_tab[type] = memp->next;    
 		memp->next = NULL;
 
-		mem = MEM_ALIGN((u8_t *)memp + sizeof(struct memp));
+		mem = LWIP_MEM_ALIGN((u8_t *)memp + sizeof(struct memp));
 		/* initialize memp memory with zeroes */
-		memset(mem, 0, memp_sizes[type]);	
+		MEMSET(mem, 0, memp_sizes[type]);	
 		return mem;
 	} else {
 		return NULL;

@@ -33,7 +33,7 @@
 #ifndef __LWBT_SDP_H__
 #define __LWBT_SDP_H__
 
-#include "netif/lwbt/l2cap.h"
+#include "lwbt/l2cap.h"
 
 struct sdp_pcb;
 struct sdp_record;

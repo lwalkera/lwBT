@@ -40,12 +40,13 @@
  */
 /*-----------------------------------------------------------------------------------*/
 
-#include "lwbtopts.h"
-#include "phybusif.h"
-#include "hci.h"
-#include "l2cap.h"
-#include "lwbt_memp.h"
+#include "arch/lwbtopts.h"
+#include "lwbt/phybusif.h"
+#include "lwbt/hci.h"
+#include "lwbt/l2cap.h"
+#include "lwbt/lwbt_memp.h"
 #include "lwip/debug.h"
+#include "lwip/mem.h"
 
 /* The HCI LINK lists. */
 struct hci_link *hci_active_links;  /* List of all active HCI LINKs */
@@ -67,7 +68,7 @@ struct hci_pcb *pcb;
 		LWIP_DEBUGF(HCI_DEBUG, ("hci_init: Could not allocate memory for pcb\n"));
 		return ERR_MEM;
 	}
-	memset(pcb, 0, sizeof(struct hci_pcb));
+	MEMSET(pcb, 0, sizeof(struct hci_pcb));
 
 	/* Clear globals */
 	hci_active_links = NULL;
@@ -88,7 +89,7 @@ struct hci_pcb *pcb;
 
 	link = lwbt_memp_malloc(MEMP_HCI_LINK);
 	if(link != NULL) {
-		memset(link, 0, sizeof(struct hci_link));
+		MEMSET(link, 0, sizeof(struct hci_link));
 		return link;
 	}
 	LWIP_DEBUGF(HCI_DEBUG, ("hci_new: Could not allocate memory for link\n"));
@@ -440,7 +441,7 @@ hci_event_input(struct pbuf *p)
 					bd_addr_set(&(inqres->bdaddr), bdaddr);
 					inqres->psrm = ((u8_t *)p->payload)[7+resp_offset];
 					inqres->psm = ((u8_t *)p->payload)[9+resp_offset];
-					memcpy(inqres->cod, ((u8_t *)p->payload)+10+resp_offset, 3);
+					MEMCPY(inqres->cod, ((u8_t *)p->payload)+10+resp_offset, 3);
 					inqres->co = *((u16_t *)(((u8_t *)p->payload)+13+resp_offset));
 					HCI_REG(&(pcb->ires), inqres);
 				} else {
@@ -749,7 +750,7 @@ hci_inquiry(u32_t lap, u8_t inq_len, u8_t num_resp,
 	((u8_t *)p->payload)[4] = lap & 0xFF;
 	((u8_t *)p->payload)[5] = lap >> 8;
 	((u8_t *)p->payload)[6] = lap >> 16;
-	//memcpy(((u8_t *)p->payload)+4, inqres->cod, 3);
+	//MEMCPY(((u8_t *)p->payload)+4, inqres->cod, 3);
 	((u8_t *)p->payload)[7] = inq_len;
 	((u8_t *)p->payload)[8] = num_resp;
 	phybusif_output(p, p->tot_len);
@@ -807,7 +808,7 @@ hci_reject_connection_request(struct bd_addr *bdaddr, u8_t reason)
 	/* Assembling command packet */
 	p = hci_cmd_ass(p, HCI_REJECT_CONN_REQ_OCF, HCI_LINK_CTRL_OGF, HCI_REJECT_CONN_REQ_PLEN);
 	/* Assembling cmd prameters */
-	memcpy(((u8_t *)p->payload) + 4, bdaddr->addr, 6);
+	MEMCPY(((u8_t *)p->payload) + 4, bdaddr->addr, 6);
 	((u8_t *)p->payload)[10] = reason;
 	phybusif_output(p, p->tot_len);
 	pbuf_free(p);
@@ -832,14 +833,14 @@ hci_pin_code_request_reply(struct bd_addr *bdaddr, u8_t pinlen, u8_t *pincode)
 	}
 
 	/* Reset buffer content just to make sure */
-	memset((u8_t *)p->payload, 0, HCI_PIN_CODE_REQ_REP_PLEN);
+	MEMSET((u8_t *)p->payload, 0, HCI_PIN_CODE_REQ_REP_PLEN);
 
 	/* Assembling command packet */
 	p = hci_cmd_ass(p, HCI_PIN_CODE_REQ_REP, HCI_LINK_CTRL_OGF, HCI_PIN_CODE_REQ_REP_PLEN);
 	/* Assembling cmd prameters */
-	memcpy(((u8_t *)p->payload) + 4, bdaddr->addr, 6);
+	MEMCPY(((u8_t *)p->payload) + 4, bdaddr->addr, 6);
 	((u8_t *)p->payload)[10] = pinlen;
-	memcpy(((u8_t *)p->payload) + 11, pincode, pinlen);
+	MEMCPY(((u8_t *)p->payload) + 11, pincode, pinlen);
 
 	phybusif_output(p, p->tot_len);
 	pbuf_free(p);
@@ -864,7 +865,7 @@ hci_pin_code_request_neg_reply(struct bd_addr *bdaddr)
 	/* Assembling command packet */
 	p = hci_cmd_ass(p, HCI_PIN_CODE_REQ_NEG_REP, HCI_LINK_CTRL_OGF, HCI_PIN_CODE_REQ_NEG_REP_PLEN);
 	/* Assembling cmd prameters */
-	memcpy(((u8_t *)p->payload)+4, bdaddr->addr, 6);
+	MEMCPY(((u8_t *)p->payload)+4, bdaddr->addr, 6);
 	phybusif_output(p, p->tot_len);
 	pbuf_free(p);
 
@@ -1028,7 +1029,7 @@ hci_set_event_filter(u8_t filter_type, u8_t filter_cond_type, u8_t* cond)
 	((u8_t *)p->payload)[5] = filter_cond_type;
 	/* Assembling cmd prameters */
 	if(cond_len) {
-		memcpy(((u8_t *)p->payload)+6, cond, cond_len);
+		MEMCPY(((u8_t *)p->payload)+6, cond, cond_len);
 	}
 	phybusif_output(p, p->tot_len);
 	pbuf_free(p);
@@ -1052,8 +1053,8 @@ hci_write_stored_link_key(struct bd_addr *bdaddr, u8_t *link)
 	p = hci_cmd_ass(p, HCI_WRITE_STORED_LINK_KEY, HCI_HC_BB_OGF, HCI_WRITE_STORED_LINK_KEY_PLEN);
 	/* Assembling cmd prameters */
 	((u8_t *)p->payload)[4] = 0x01;
-	memcpy(((u8_t *)p->payload) + 5, bdaddr->addr, 6);
-	memcpy(((u8_t *)p->payload) + 11, link, 16);
+	MEMCPY(((u8_t *)p->payload) + 5, bdaddr->addr, 6);
+	MEMCPY(((u8_t *)p->payload) + 11, link, 16);
 	phybusif_output(p, p->tot_len);
 	pbuf_free(p);
 
@@ -1076,7 +1077,7 @@ hci_change_local_name(u8_t *name, u8_t len)
 	/* Assembling command packet */
 	p = hci_cmd_ass(p, HCI_CHANGE_LOCAL_NAME, HCI_HC_BB_OGF, HCI_CHANGE_LOCAL_NAME_PLEN + len);
 	/* Assembling cmd prameters */
-	memcpy(((u8_t *)p->payload) + 4, name, len);
+	MEMCPY(((u8_t *)p->payload) + 4, name, len);
 	phybusif_output(p, p->tot_len);
 	pbuf_free(p);
 
@@ -1148,7 +1149,7 @@ hci_write_cod(u8_t *cod)
 	/* Assembling command packet */
 	p = hci_cmd_ass(p, HCI_W_COD_OCF, HCI_HC_BB_OGF, HCI_W_COD_PLEN);
 	/* Assembling cmd prameters */
-	memcpy(((u8_t *)p->payload)+4, cod, 3);
+	MEMCPY(((u8_t *)p->payload)+4, cod, 3);
 	phybusif_output(p, p->tot_len);
 	pbuf_free(p);
 
@@ -1373,7 +1374,7 @@ lp_connect_req(struct bd_addr *bdaddr, u8_t allow_role_switch)
 	/* Assembling command packet */
 	p = hci_cmd_ass(p, HCI_CREATE_CONN_OCF, HCI_LINK_CTRL_OGF, HCI_CREATE_CONN_PLEN);
 	/* Assembling cmd prameters */
-	memcpy(((u8_t *)p->payload)+4, bdaddr->addr, 6);
+	MEMCPY(((u8_t *)p->payload)+4, bdaddr->addr, 6);
 
 	((u16_t *)p->payload)[5] = HCI_PACKET_TYPE;
 	((u8_t *)p->payload)[12] = page_scan_repetition_mode;

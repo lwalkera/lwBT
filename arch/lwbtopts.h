@@ -130,7 +130,7 @@
 
 /* ---------- RFCOMM options ---------- */
 /* RFCOMM_N: Maximum frame size for RFCOMM segments (min 23, max 32767)*/
-#define RFCOMM_N ((PPP_IN_MRU * 2) + 8) /* Default: Worst case byte stuffed PPP packet size + 
+#define RFCOMM_N ((1024) + 8) /* Default: Worst case byte stuffed PPP packet size + 
 					   non-compressed PPP header size and FCS size */
 /* RFCOMM_K: Initial amount of credits issued to the peer (min 0, max 7) */
 #define RFCOMM_K 0

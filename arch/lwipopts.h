@@ -1,6 +1,7 @@
 #pragma once
 
 #define NO_SYS 1
+//#define MEM_LIBC_MALLOC 1
 #define MEM_ALIGNMENT 4
 #define LWIP_TCP 0
 #define LWIP_UDP 0
