@@ -39,7 +39,7 @@
 struct phybusif_cb;
 
 /* Application program's interface: */
-void phybusif_init(void); /* Must be called first to initialize the physical bus interface */
+void phybusif_init(const char * port); /* Must be called first to initialize the physical bus interface */
 err_t phybusif_reset(struct phybusif_cb *cb);
 err_t phybusif_input(struct phybusif_cb *cb);
 

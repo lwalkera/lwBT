@@ -33,12 +33,12 @@
 #ifndef __LWBT_LWBTOPTS_H__
 #define __LWBT_LWBTOPTS_H__
 
-#define PHYBUSIF_DEBUG DBG_OFF
-#define HCI_DEBUG DBG_OFF
-#define HCI_EV_DEBUG DBG_OFF
-#define L2CAP_DEBUG DBG_OFF
-#define SDP_DEBUG DBG_OFF
-#define RFCOMM_DEBUG DBG_OFF
+#define PHYBUSIF_DEBUG	LWIP_DBG_ON
+#define HCI_DEBUG		LWIP_DBG_ON
+#define HCI_EV_DEBUG	LWIP_DBG_ON
+#define L2CAP_DEBUG		LWIP_DBG_ON
+#define SDP_DEBUG		LWIP_DBG_ON
+#define RFCOMM_DEBUG	LWIP_DBG_ON
 
 
 /* ---------- Memory options ---------- */

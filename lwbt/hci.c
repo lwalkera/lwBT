@@ -30,15 +30,15 @@
  *
  */
 
-/*-----------------------------------------------------------------------------------*/
+
 /* hci.c
  *
- * Implementation of the Host Controller Interface (HCI). A command interface to the
- * baseband controller and link manager, and gives access to hardware status and 
- * control registers.
+ * Implementation of the Host Controller Interface (HCI). A command interface
+ * to the baseband controller and link manager, and gives access to hardware
+ * status and control registers.
  *
  */
-/*-----------------------------------------------------------------------------------*/
+
 
 #include "arch/lwbtopts.h"
 #include "lwbt/phybusif.h"
@@ -54,15 +54,13 @@ struct hci_link *hci_tmp_link;
 
 struct hci_pcb *pcb;
 
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_init():
  *
  * Initializes the HCI layer.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-	  hci_init(void)
+err_t hci_init(void)
 {
 	if((pcb = lwbt_memp_malloc(MEMP_HCI_PCB)) == NULL) {
 		LWIP_DEBUGF(HCI_DEBUG, ("hci_init: Could not allocate memory for pcb\n"));
@@ -75,15 +73,13 @@ struct hci_pcb *pcb;
 	hci_tmp_link = NULL;
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_new():
  *
  * Creates a new HCI link control block
  */
-/*-----------------------------------------------------------------------------------*/
-	struct hci_link *
-	  hci_new(void)
+struct hci_link * hci_new(void)
 {
 	struct hci_link *link;
 
@@ -95,15 +91,13 @@ struct hci_pcb *pcb;
 	LWIP_DEBUGF(HCI_DEBUG, ("hci_new: Could not allocate memory for link\n"));
 	return NULL;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_close():
  *
  * Close the link control block.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-	  hci_close(struct hci_link *link)
+err_t hci_close(struct hci_link *link)
 { 
 #if RFCOMM_FLOW_QUEUEING
 	if(link->p != NULL) {
@@ -115,15 +109,13 @@ struct hci_pcb *pcb;
 	link = NULL;
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_reset_all():
  *
  * Closes all active link control blocks.
  */
-/*-----------------------------------------------------------------------------------*/
-	void
-	  hci_reset_all(void)
+void hci_reset_all(void)
 { 
 	struct hci_link *link, *tlink;
 	struct hci_inq_res *ires, *tires;
@@ -144,94 +136,79 @@ struct hci_pcb *pcb;
 
 	hci_init();
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_arg():
  *
  * Used to specify the argument that should be passed callback
  * functions.
  */
-/*-----------------------------------------------------------------------------------*/
-	void
-	  hci_arg(void *arg)
+void hci_arg(void *arg)
 {
 	pcb->callback_arg = arg;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_cmd_complete():
  *
  * Used to specify the function that should be called when HCI has received a 
  * command complete event.
  */
-/*-----------------------------------------------------------------------------------*/
-	void
-	  hci_cmd_complete(err_t (* cmd_complete)(void *arg, struct hci_pcb *pcb, u8_t ogf, 
-				  u8_t ocf, u8_t result)) 
+void hci_cmd_complete(err_t (* cmd_complete)(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t result)) 
 {
 	pcb->cmd_complete = cmd_complete;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_pin_req():
  *
  * Used to specify the function that should be called when HCI has received a 
  * PIN code request event.
  */
-/*-----------------------------------------------------------------------------------*/
-	void
-	  hci_pin_req(err_t (* pin_req)(void *arg, struct bd_addr *bdaddr))
+void hci_pin_req(err_t (* pin_req)(void *arg, struct bd_addr *bdaddr))
 {
 	pcb->pin_req = pin_req;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_link_key_not():
  *
  * Used to specify the function that should be called when HCI has received a 
  * link key notification event.
  */
-/*-----------------------------------------------------------------------------------*/
-	void 
-	  hci_link_key_not(err_t (* link_key_not)(void *arg, struct bd_addr *bdaddr, u8_t *key))
+void hci_link_key_not(err_t (* link_key_not)(void *arg, struct bd_addr *bdaddr, u8_t *key))
 {
 	pcb->link_key_not = link_key_not;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_connection_complete():
  *
  * Used to specify the function that should be called when HCI has received a 
  * connection complete event.
  */
-/*-----------------------------------------------------------------------------------*/
-	void 
-	  hci_connection_complete(err_t (* conn_complete)(void *arg, struct bd_addr *bdaddr))
+void hci_connection_complete(err_t (* conn_complete)(void *arg, struct bd_addr *bdaddr))
 {
 	pcb->conn_complete = conn_complete;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_wlp_complete():
  *
  * Used to specify the function that should be called when HCI has received a 
  * successful write link policy complete event.
  */
-/*-----------------------------------------------------------------------------------*/
-	void 
-	  hci_wlp_complete(err_t (* wlp_complete)(void *arg, struct bd_addr *bdaddr))
+void hci_wlp_complete(err_t (* wlp_complete)(void *arg, struct bd_addr *bdaddr))
 {
 	pcb->wlp_complete = wlp_complete;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_get_link():
  *
  * Used to get the link structure for that represents an ACL connection.
  */
-/*-----------------------------------------------------------------------------------*/
-	struct hci_link *
-	  hci_get_link(struct bd_addr *bdaddr)
+struct hci_link * hci_get_link(struct bd_addr *bdaddr)
 {
 	struct hci_link *link;
 
@@ -242,7 +219,7 @@ struct hci_pcb *pcb;
 	}
 	return link;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * hci_acl_input():
  *
@@ -250,9 +227,7 @@ struct hci_pcb *pcb;
  * finds a bluetooth address that correspond to the connection handle and forward the
  * packet to the L2CAP layer.
  */
-/*-----------------------------------------------------------------------------------*/
-	void
-	  hci_acl_input(struct pbuf *p)
+void hci_acl_input(struct pbuf *p)
 {
 	struct hci_acl_hdr *aclhdr;
 	struct hci_link *link;
@@ -292,10 +267,9 @@ struct hci_pcb *pcb;
 		pbuf_free(p); /* If no acitve ACL link was found, we silently discard the packet */
 	}
 }
-/*-----------------------------------------------------------------------------------*/
+
 #if HCI_EV_DEBUG
-u8_t *
-hci_get_error_code(u8_t code) {
+char * hci_get_error_code(u8_t code) {
 	switch(code) {
 		case HCI_SUCCESS:
 			return("Success");
@@ -386,21 +360,18 @@ hci_get_error_code(u8_t code) {
 	}
 }
 #else
-	u8_t *
-hci_get_error_code(u8_t code) 
+u8_t * hci_get_error_code(u8_t code) 
 {
 	return 0;
 }
 #endif /* HCI_EV_DEBUG */
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_event_input():
  *
  * Called by the physical bus interface. Parses the received event packet to determine 
  * which event occurred and handles it.
  */
-/*-----------------------------------------------------------------------------------*/
-	void
-hci_event_input(struct pbuf *p)
+void hci_event_input(struct pbuf *p)
 {
 	struct hci_inq_res *inqres;
 	struct hci_event_hdr *evhdr;
@@ -632,12 +603,12 @@ hci_event_input(struct pbuf *p)
 			LWIP_DEBUGF(HCI_EV_DEBUG, ("New Role: 0x%x\n", ((u8_t *)p->payload)[7]));
 			break;
 		case HCI_NBR_OF_COMPLETED_PACKETS:
-			LWIP_DEBUGF(DBG_OFF, ("hci_event_input: Number Of Completed Packets\n"));
-			LWIP_DEBUGF(DBG_OFF, ("Number_of_Handles: 0x%x\n", ((u8_t *)p->payload)[0]));
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("hci_event_input: Number Of Completed Packets\n"));
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("Number_of_Handles: 0x%x\n", ((u8_t *)p->payload)[0]));
 			for(i=0;i<((u8_t *)p->payload)[0];i++) {
 				resp_offset = i*4;
-				LWIP_DEBUGF(DBG_OFF, ("Conn_hdl: 0x%x%x\n", ((u8_t *)p->payload)[1+resp_offset], ((u8_t *)p->payload)[2+resp_offset]));
-				LWIP_DEBUGF(DBG_OFF, ("HC_Num_Of_Completed_Packets: 0x%x\n",*((u16_t *)(((u8_t *)p->payload)+3+resp_offset))));
+				LWIP_DEBUGF(HCI_EV_DEBUG, ("Conn_hdl: 0x%x%x\n", ((u8_t *)p->payload)[1+resp_offset], ((u8_t *)p->payload)[2+resp_offset]));
+				LWIP_DEBUGF(HCI_EV_DEBUG, ("HC_Num_Of_Completed_Packets: 0x%x\n",*((u16_t *)(((u8_t *)p->payload)+3+resp_offset))));
 				/* Add number of completed ACL packets to the number of ACL packets that the 
 				   BT module can buffer */
 				pcb->hc_num_acl += *((u16_t *)(((u8_t *)p->payload) + 3 + resp_offset));
@@ -695,17 +666,15 @@ hci_event_input(struct pbuf *p)
 			break;
 	}/* switch */
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* HCI Commands */ 
-/*-----------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------*/
+
+
 /* hci_cmd_ass():
  *
  * Assemble the command header.
  */
-/*-----------------------------------------------------------------------------------*/
-	struct pbuf *
-hci_cmd_ass(struct pbuf *p, u8_t ocf, u8_t ogf, u8_t len) 
+struct pbuf * hci_cmd_ass(struct pbuf *p, u8_t ocf, u8_t ogf, u8_t len) 
 {
 	((u8_t *)p->payload)[0] = HCI_COMMAND_DATA_PACKET; /* cmd packet type */
 	((u8_t *)p->payload)[1] = (ocf & 0xff); /* OCF & OGF */
@@ -716,17 +685,13 @@ hci_cmd_ass(struct pbuf *p, u8_t ocf, u8_t ogf, u8_t len)
 	}
 	return p;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_inquiry():
  *
  * Cause the Host contoller to enter inquiry mode to discovery other nearby Bluetooth 
  * devices.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_inquiry(u32_t lap, u8_t inq_len, u8_t num_resp, 
-		err_t (* inq_complete)(void *arg, struct hci_pcb *pcb, 
-			struct hci_inq_res *ires, u16_t result))
+err_t hci_inquiry(u32_t lap, u8_t inq_len, u8_t num_resp, err_t (* inq_complete)(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires, u16_t result))
 {
 	struct pbuf *p;
 	struct hci_inq_res *tmpres;
@@ -758,14 +723,12 @@ hci_inquiry(u32_t lap, u8_t inq_len, u8_t num_resp,
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_disconnect():
  *
  * Used to terminate an existing connection.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_disconnect(struct bd_addr *bdaddr, u8_t reason)
+err_t hci_disconnect(struct bd_addr *bdaddr, u8_t reason)
 {
 	struct pbuf *p;
 	struct hci_link *link;
@@ -791,14 +754,12 @@ hci_disconnect(struct bd_addr *bdaddr, u8_t reason)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_reject_connection_request():
  *
  * Used to decline a new incoming connection request.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_reject_connection_request(struct bd_addr *bdaddr, u8_t reason)
+err_t hci_reject_connection_request(struct bd_addr *bdaddr, u8_t reason)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_REJECT_CONN_REQ_PLEN, PBUF_RAM)) == NULL) {
@@ -815,15 +776,13 @@ hci_reject_connection_request(struct bd_addr *bdaddr, u8_t reason)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_pin_code_request_reply():
  *
  * Used to reply to a PIN Code Request event from the Host Controller and specifies 
  * the PIN code to use for a connection.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_pin_code_request_reply(struct bd_addr *bdaddr, u8_t pinlen, u8_t *pincode)
+err_t hci_pin_code_request_reply(struct bd_addr *bdaddr, u8_t pinlen, u8_t *pincode)
 {
 	struct pbuf *p;
 
@@ -847,15 +806,13 @@ hci_pin_code_request_reply(struct bd_addr *bdaddr, u8_t pinlen, u8_t *pincode)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_pin_code_request_neg_reply():
  *
  * Used to reply to a PIN Code Request event from the Host Controller when the Host 
  * cannot specify a PIN code to use for a connection.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_pin_code_request_neg_reply(struct bd_addr *bdaddr)
+err_t hci_pin_code_request_neg_reply(struct bd_addr *bdaddr)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_PIN_CODE_REQ_NEG_REP_PLEN, PBUF_RAM)) == NULL) {
@@ -871,15 +828,12 @@ hci_pin_code_request_neg_reply(struct bd_addr *bdaddr)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_sniff_mode():
  *
  * Sets an ACL connection to low power Sniff mode.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_sniff_mode(struct bd_addr *bdaddr, u16_t max_interval, u16_t min_interval, 
-		u16_t attempt, u16_t timeout)
+err_t hci_sniff_mode(struct bd_addr *bdaddr, u16_t max_interval, u16_t min_interval, u16_t attempt, u16_t timeout)
 {
 	struct pbuf *p;
 	struct hci_link *link;
@@ -910,15 +864,13 @@ hci_sniff_mode(struct bd_addr *bdaddr, u16_t max_interval, u16_t min_interval,
 	pbuf_free(p);
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_write_link_policy_settings():
  *
  * Control the modes (park, sniff, hold) that an ACL connection can take.
  *
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_write_link_policy_settings(struct bd_addr *bdaddr, u16_t link_policy)
+err_t hci_write_link_policy_settings(struct bd_addr *bdaddr, u16_t link_policy)
 {
 	struct pbuf *p;
 	struct hci_link *link;
@@ -945,14 +897,12 @@ hci_write_link_policy_settings(struct bd_addr *bdaddr, u16_t link_policy)
 	pbuf_free(p);
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_reset():
  *
  * Reset the Bluetooth host controller, link manager, and radio module.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_reset(void)
+err_t hci_reset(void)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_RESET_PLEN, PBUF_RAM)) == NULL) {
@@ -967,14 +917,12 @@ hci_reset(void)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_set_event_filter():
  *
  * Used by the host to specify different event filters.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_set_event_filter(u8_t filter_type, u8_t filter_cond_type, u8_t* cond)
+err_t hci_set_event_filter(u8_t filter_type, u8_t filter_cond_type, u8_t* cond)
 {
 	u8_t cond_len = 0x00;
 	struct pbuf *p;
@@ -1035,14 +983,12 @@ hci_set_event_filter(u8_t filter_type, u8_t filter_cond_type, u8_t* cond)
 	pbuf_free(p);
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_write_stored_link_key():
  *
  * Writes a link key to be stored in the Bluetooth host controller.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_write_stored_link_key(struct bd_addr *bdaddr, u8_t *link)
+err_t hci_write_stored_link_key(struct bd_addr *bdaddr, u8_t *link)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_WRITE_STORED_LINK_KEY_PLEN, PBUF_RAM)) == NULL) {
@@ -1060,14 +1006,12 @@ hci_write_stored_link_key(struct bd_addr *bdaddr, u8_t *link)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_change_local_name():
  *
  * Writes a link key to be stored in the Bluetooth host controller.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_change_local_name(u8_t *name, u8_t len)
+err_t hci_change_local_name(u8_t *name, u8_t len)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_CHANGE_LOCAL_NAME_PLEN + len, PBUF_RAM)) == NULL) {
@@ -1083,15 +1027,13 @@ hci_change_local_name(u8_t *name, u8_t len)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_write_page_timeout():
  *
  * Define the amount of time a connection request will wait for the remote device
  * to respond before the local device returns a connection failure.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_write_page_timeout(u16_t page_timeout)
+err_t hci_write_page_timeout(u16_t page_timeout)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_W_PAGE_TIMEOUT_PLEN, PBUF_RAM)) == NULL) {
@@ -1107,15 +1049,13 @@ hci_write_page_timeout(u16_t page_timeout)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_write_scan_enable():
  *
  * Controls whether or not the Bluetooth device will periodically scan for page 
  * attempts and/or inquiry requests from other Bluetooth devices.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_write_scan_enable(u8_t scan_enable)
+err_t hci_write_scan_enable(u8_t scan_enable)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_W_SCAN_EN_PLEN, PBUF_RAM)) == NULL) {
@@ -1131,15 +1071,13 @@ hci_write_scan_enable(u8_t scan_enable)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_write_cod():
  *
  * Write the value for the Class_of_Device parameter, which is used to indicate its 
  * capabilities to other devices.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_write_cod(u8_t *cod)
+err_t hci_write_cod(u8_t *cod)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_W_COD_PLEN, PBUF_RAM)) == NULL) {
@@ -1155,15 +1093,13 @@ hci_write_cod(u8_t *cod)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_set_hc_to_h_fc():
  *
  * Used by the Host to turn flow control on or off in the direction from the Host 
  * Controller to the Host.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_set_hc_to_h_fc(void)
+err_t hci_set_hc_to_h_fc(void)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_SET_HC_TO_H_FC_PLEN, PBUF_RAM)) == NULL) {
@@ -1181,15 +1117,13 @@ hci_set_hc_to_h_fc(void)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_host_buffer_size():
  *
  * Used by the Host to notify the Host Controller about the maximum size of the data 
  * portion of HCI ACL Data Packets sent from the Host Controller to the Host.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_host_buffer_size(void)
+err_t hci_host_buffer_size(void)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_H_BUF_SIZE_PLEN, PBUF_RAM)) == NULL) {
@@ -1209,16 +1143,14 @@ hci_host_buffer_size(void)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_host_num_comp_packets():
  *
  * Used by the Host to indicate to the Host Controller the number of HCI Data Packets 
  * that have been completed for each Connection Handle since the previous 
  * Host_Number_Of_Completed_Packets command was sent to the Host Controller.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_host_num_comp_packets(u16_t conhdl, u16_t num_complete)
+err_t hci_host_num_comp_packets(u16_t conhdl, u16_t num_complete)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_H_NUM_COMPL_PLEN, PBUF_RAM)) == NULL) {
@@ -1237,15 +1169,13 @@ hci_host_num_comp_packets(u16_t conhdl, u16_t num_complete)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_read_buffer_size():
  *
  * Used to read the maximum size of the data portion of HCI ACL packets sent from the 
  * Host to the Host Controller.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_read_buffer_size(void)
+err_t hci_read_buffer_size(void)
 {
 	struct pbuf *p;
 	if((p = pbuf_alloc(PBUF_RAW, HCI_R_BUF_SIZE_PLEN, PBUF_RAM)) == NULL) {
@@ -1260,14 +1190,12 @@ hci_read_buffer_size(void)
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* hci_read_bd_addr():
  *
  * Used to retreive the Bluetooth address of the host controller.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-hci_read_bd_addr(err_t (* rbd_complete)(void *arg, struct bd_addr *bdaddr))
+err_t hci_read_bd_addr(err_t (* rbd_complete)(void *arg, struct bd_addr *bdaddr))
 {
 	struct pbuf *p;
 
@@ -1285,14 +1213,12 @@ hci_read_bd_addr(err_t (* rbd_complete)(void *arg, struct bd_addr *bdaddr))
 
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* lp_write_flush_timeout():
  *
  * Called by L2CAP to set the flush timeout for the ACL link.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-lp_write_flush_timeout(struct bd_addr *bdaddr, u16_t flushto)
+err_t lp_write_flush_timeout(struct bd_addr *bdaddr, u16_t flushto)
 {
 	struct hci_link *link;
 	struct pbuf *p;
@@ -1320,15 +1246,13 @@ lp_write_flush_timeout(struct bd_addr *bdaddr, u16_t flushto)
 	pbuf_free(p);
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* lp_connect_req():
  *
  * Called by L2CAP to cause the Link Manager to create a connection to the 
  * Bluetooth device with the BD_ADDR specified by the command parameters.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-lp_connect_req(struct bd_addr *bdaddr, u8_t allow_role_switch)
+err_t lp_connect_req(struct bd_addr *bdaddr, u8_t allow_role_switch)
 {
 	u8_t page_scan_repetition_mode, page_scan_mode;
 	u16_t clock_offset;
@@ -1385,15 +1309,13 @@ lp_connect_req(struct bd_addr *bdaddr, u8_t allow_role_switch)
 	pbuf_free(p);
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* lp_acl_write():
  *
  * Called by L2CAP to send data to the Host Controller that will be transfered over
  * the ACL link from there.
  */
-/*-----------------------------------------------------------------------------------*/
-	err_t
-lp_acl_write(struct bd_addr *bdaddr, struct pbuf *p, u16_t len, u8_t pb)
+err_t lp_acl_write(struct bd_addr *bdaddr, struct pbuf *p, u16_t len, u8_t pb)
 {
 	struct hci_link *link;
 	static struct hci_acl_hdr *aclhdr;
@@ -1459,15 +1381,13 @@ lp_acl_write(struct bd_addr *bdaddr, struct pbuf *p, u16_t len, u8_t pb)
 	pbuf_free(q);
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* lp_is_connected():
  *
  * Called by L2CAP to check if an active ACL connection exists for the specified 
  * Bluetooth address.
  */
-/*-----------------------------------------------------------------------------------*/
-	u8_t
-lp_is_connected(struct bd_addr *bdaddr)
+u8_t lp_is_connected(struct bd_addr *bdaddr)
 {
 	struct hci_link *link;
 
@@ -1478,17 +1398,15 @@ lp_is_connected(struct bd_addr *bdaddr)
 	}
 	return 1;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* lp_pdu_maxsize():
  *
  * Called by L2CAP to check the maxsize of the PDU. In this case it is the largest
  * ACL packet that the Host Controller can buffer.
  */
-/*-----------------------------------------------------------------------------------*/
-	u16_t
-lp_pdu_maxsize(void)
+u16_t lp_pdu_maxsize(void)
 {
 	return pcb->maxsize;
 }
-/*-----------------------------------------------------------------------------------*/
+
 

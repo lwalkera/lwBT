@@ -1,4 +1,4 @@
-CFLAGS = -I. -Wall -m32
+CFLAGS = -I. -Wall -m32 -g
 
 all: lwbt.out
 

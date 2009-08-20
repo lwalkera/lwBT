@@ -1,5 +1,6 @@
 #pragma once
 
+#define LWIP_DEBUG 1
 #define NO_SYS 1
 //#define MEM_LIBC_MALLOC 1
 #define MEM_ALIGNMENT 4

@@ -49,7 +49,6 @@
 #include <fcntl.h>
 
 #define BAUDRATE B115200
-#define SERIALDEVICE "/dev/ttyUSB1" /* change this to whatever tty you are using */
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
 int fd;
@@ -58,17 +57,18 @@ int fd;
  */
 /*-----------------------------------------------------------------------------------*/
 void
-phybusif_init(void)
+phybusif_init(const char * port)
 {
   struct termios oldtio, newtio;
-  
+  char * bootcmd = "boot 0004\n";
+
   /* Open the device to be non-blocking (read will return immediatly) */
-  fd = open(SERIALDEVICE, O_RDWR | O_NOCTTY | O_NONBLOCK);
-  if (fd <0) {perror(SERIALDEVICE); exit(-1); }
+  fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
+  if (fd <0) {perror(port); exit(-1); }
   
   /* Make the file descriptor asynchronous (the manual page says only
      O_APPEND and O_NONBLOCK, will work with F_SETFL...) */
-  fcntl(fd, F_SETFL, FASYNC);
+  //fcntl(fd, F_SETFL, FASYNC);
   
   tcgetattr(fd,&oldtio); /* Save current port settings */
   /* Set new port settings */
@@ -81,6 +81,8 @@ phybusif_init(void)
   
   tcsetattr(fd,TCSANOW,&newtio);
   tcflush(fd, TCIOFLUSH);
+
+  write(fd, bootcmd, strlen(bootcmd));
 }
 /*-----------------------------------------------------------------------------------*/
 err_t
@@ -104,125 +106,125 @@ phybusif_reset(struct phybusif_cb *cb)
 err_t
 phybusif_input(struct phybusif_cb *cb) 
 {
-  unsigned char c;
-  unsigned char n;
+	unsigned char c;
+	unsigned char n;
 
-  while((n = read(fd,&c,1))) {
-    switch(cb->state) {
-    case W4_PACKET_TYPE:
-      switch(c) {
-      case HCI_ACL_DATA_PACKET:
-	cb->state = W4_ACL_HDR;
-	break;
-      case HCI_EVENT_PACKET:
-	cb->state = W4_EVENT_HDR;
-	break;
-      default:
-        LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Unknown packet type\n"));
-	break;
-      }
-      break;
-    case W4_EVENT_HDR:
-      ((u8_t *)cb->q->payload)[cb->recvd] = c;
-      cb->tot_recvd++;
-      cb->recvd++;
-      if(cb->recvd == HCI_EVENT_HDR_LEN) {
-	cb->evhdr = cb->p->payload;
-	pbuf_header(cb->p, -HCI_EVENT_HDR_LEN);
-	cb->recvd = cb->tot_recvd = 0;
-	if(cb->evhdr->len > 0) {
-	  cb->state = W4_EVENT_PARAM;
-	} else {
-	  hci_event_input(cb->p); /* Handle incoming event */
-	  pbuf_free(cb->p);
-	  phybusif_reset(cb);
-	  return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
+	while((n = read(fd,&c,1))) {
+		switch(cb->state) {
+			case W4_PACKET_TYPE:
+				switch(c) {
+					case HCI_ACL_DATA_PACKET:
+						cb->state = W4_ACL_HDR;
+						break;
+					case HCI_EVENT_PACKET:
+						cb->state = W4_EVENT_HDR;
+						break;
+					default:
+						LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Unknown packet type\n"));
+						break;
+				}
+				break;
+			case W4_EVENT_HDR:
+				((u8_t *)cb->q->payload)[cb->recvd] = c;
+				cb->tot_recvd++;
+				cb->recvd++;
+				if(cb->recvd == HCI_EVENT_HDR_LEN) {
+					cb->evhdr = cb->p->payload;
+					pbuf_header(cb->p, -HCI_EVENT_HDR_LEN);
+					cb->recvd = cb->tot_recvd = 0;
+					if(cb->evhdr->len > 0) {
+						cb->state = W4_EVENT_PARAM;
+					} else {
+						hci_event_input(cb->p); /* Handle incoming event */
+						pbuf_free(cb->p);
+						phybusif_reset(cb);
+						return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
+					}
+				}
+				break;
+			case W4_EVENT_PARAM:
+				((u8_t *)cb->q->payload)[cb->recvd] = c;
+				cb->tot_recvd++;
+				cb->recvd++;
+				if(cb->recvd == cb->q->len) { /* Pbuf full. alloc and add new tail to chain */
+					cb->recvd = 0;
+					if((cb->q = pbuf_alloc(PBUF_RAW, PBUF_POOL_BUFSIZE, PBUF_POOL)) == NULL) {
+						LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Could not allocate memory for event parameter pbuf\n"));
+						return ERR_MEM; /* Could not allocate memory for pbuf */
+					}
+					pbuf_chain(cb->p, cb->q);
+					pbuf_free(cb->q);
+				}
+				if(cb->tot_recvd == cb->evhdr->len) {
+					hci_event_input(cb->p); /* Handle incoming event */
+					pbuf_free(cb->p);
+					phybusif_reset(cb);
+					return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
+				}
+				break;
+			case W4_ACL_HDR:
+				((u8_t *)cb->q->payload)[cb->recvd] = c;
+				cb->tot_recvd++;
+				cb->recvd++;
+				if(cb->recvd == HCI_ACL_HDR_LEN) {
+					cb->aclhdr = cb->p->payload;
+					pbuf_header(cb->p, -HCI_ACL_HDR_LEN);
+					cb->recvd = cb->tot_recvd = 0;
+					if(cb->aclhdr->len > 0) {
+						cb->state = W4_ACL_DATA;
+					} else {
+						LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_reset: Forward Empty ACL packet to higher layer\n"));
+						hci_acl_input(cb->p); /* Handle incoming ACL data */
+						phybusif_reset(cb);
+						return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
+					}
+				}
+				break;
+			case W4_ACL_DATA:
+				((u8_t *)cb->q->payload)[cb->recvd] = c;
+				cb->tot_recvd++;
+				cb->recvd++;
+				if(cb->recvd == cb->q->len) { /* Pbuf full. alloc and add new tail to chain */
+					cb->recvd = 0;
+					if((cb->q = pbuf_alloc(PBUF_RAW, PBUF_POOL_BUFSIZE, PBUF_POOL)) == NULL) {
+						LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Could not allocate memory for ACL data pbuf\n"));
+						return ERR_MEM; /* Could not allocate memory for pbuf */
+					}
+					pbuf_chain(cb->p, cb->q);
+					pbuf_free(cb->q);
+				}
+				if(cb->tot_recvd == cb->aclhdr->len) {
+					LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Forward ACL packet to higher layer\n"));
+					hci_acl_input(cb->p); /* Handle incoming ACL data */
+					phybusif_reset(cb);
+					return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
+				}
+				break;
+			default:
+				LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Unknown state\n\n"));
+				break;
+		}
 	}
-      }
-      break;
-    case W4_EVENT_PARAM:
-      ((u8_t *)cb->q->payload)[cb->recvd] = c;
-      cb->tot_recvd++;
-      cb->recvd++;
-      if(cb->recvd == cb->q->len) { /* Pbuf full. alloc and add new tail to chain */
-        cb->recvd = 0;
-        if((cb->q = pbuf_alloc(PBUF_RAW, PBUF_POOL_BUFSIZE, PBUF_POOL)) == NULL) {
-	  LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Could not allocate memory for event parameter pbuf\n"));
-	  return ERR_MEM; /* Could not allocate memory for pbuf */
-	}
-	pbuf_chain(cb->p, cb->q);
-	pbuf_free(cb->q);
-      }
-      if(cb->tot_recvd == cb->evhdr->len) {
-	hci_event_input(cb->p); /* Handle incoming event */
-        pbuf_free(cb->p);
-	phybusif_reset(cb);
-        return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
-      }
-      break;
-    case W4_ACL_HDR:
-      ((u8_t *)cb->q->payload)[cb->recvd] = c;
-      cb->tot_recvd++;
-      cb->recvd++;
-      if(cb->recvd == HCI_ACL_HDR_LEN) {
-	cb->aclhdr = cb->p->payload;
-	pbuf_header(cb->p, -HCI_ACL_HDR_LEN);
-	cb->recvd = cb->tot_recvd = 0;
-	if(cb->aclhdr->len > 0) {
-	  cb->state = W4_ACL_DATA;
-	} else {
-	  LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_reset: Forward Empty ACL packet to higher layer\n"));
-	  hci_acl_input(cb->p); /* Handle incoming ACL data */
-	  phybusif_reset(cb);
-	  return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
-	}
-      }
-      break;
-    case W4_ACL_DATA:
-      ((u8_t *)cb->q->payload)[cb->recvd] = c;
-      cb->tot_recvd++;
-      cb->recvd++;
-      if(cb->recvd == cb->q->len) { /* Pbuf full. alloc and add new tail to chain */
-        cb->recvd = 0;
-        if((cb->q = pbuf_alloc(PBUF_RAW, PBUF_POOL_BUFSIZE, PBUF_POOL)) == NULL) {
-	  LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Could not allocate memory for ACL data pbuf\n"));
-	  return ERR_MEM; /* Could not allocate memory for pbuf */
-	}
-        pbuf_chain(cb->p, cb->q);
-	pbuf_free(cb->q);
-      }
-      if(cb->tot_recvd == cb->aclhdr->len) {
-	LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Forward ACL packet to higher layer\n"));
-	hci_acl_input(cb->p); /* Handle incoming ACL data */
-	phybusif_reset(cb);
-        return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
-      }
-      break;
-    default:
-      LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Unknown state\n\n"));
-      break;
-    }
-  }
-  return ERR_OK;
+	return ERR_OK;
 }
 /*-----------------------------------------------------------------------------------*/
-void
+	void
 phybusif_output(struct pbuf *p, u16_t len) 
 {
-  static struct pbuf *q;
-  static int i;
-  static unsigned char *ptr;
-  unsigned char c;
- 
-  /* Send pbuf on UART */
-  LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_output: Send pbuf on UART\n"));
-  for(q = p; q != NULL; q = q->next) {
-    ptr = q->payload;
-    for(i = 0; i < q->len && len; i++) {
-      c = *ptr++;
-      write(fd, &c, 1);
-      --len;
-    }
-  }
+	static struct pbuf *q;
+	static int i;
+	static unsigned char *ptr;
+	unsigned char c;
+
+	/* Send pbuf on UART */
+	LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_output: Send pbuf on UART\n"));
+	for(q = p; q != NULL; q = q->next) {
+		ptr = q->payload;
+		for(i = 0; i < q->len && len; i++) {
+			c = *ptr++;
+			write(fd, &c, 1);
+			--len;
+		}
+	}
 }
 /*-----------------------------------------------------------------------------------*/
