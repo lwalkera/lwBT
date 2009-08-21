@@ -110,12 +110,15 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 					if(result == HCI_SUCCESS) {
 						LWIP_DEBUGF(BT_IP_DEBUG, ("successful HCI_SET_EVENT_FILTER.\n"));
 						if(btctrl == 0) {
-							hci_write_cod(cod_lap); /*  */
+							hci_write_cod(cod_lap);
 							btctrl = 1;
-						} else {
+						} 
+						else
+						{
 							hci_write_scan_enable(0x03); /* Inquiry and page scan enabled */
 						}
-					} else {
+					} else
+					{
 						LWIP_DEBUGF(BT_IP_DEBUG, ("Unsuccessful HCI_SET_EVENT_FILTER.\n"));
 						return ERR_CONN;
 					}
@@ -169,12 +172,26 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 	return ERR_OK;
 }
 
+err_t pin_req(void *arg, struct bd_addr *bdaddr)
+{
+	LWIP_DEBUGF(BT_IP_DEBUG, ("pin_req\n"));
+	return hci_pin_code_request_reply(bdaddr, 4, (u8_t*)"1234");
+}
+
+err_t read_bdaddr_complete(void *arg, struct bd_addr *bdaddr)
+{
+//	memcpy(&(bt_ip_state.bdaddr), bdaddr, 6);
+	return ERR_OK;
+}
+
+
 int main(int argc, char **argv)
 {
 	struct phybusif_cb *cb;
 	struct timeval tcptv, bttv, now;
 	struct timezone tz;
 	u8_t btiptmr = 0;
+	u8_t flag = 0x3;
 
 	sys_init();
 #ifdef PERF
@@ -202,8 +219,11 @@ int main(int argc, char **argv)
 	}
 	l2cap_init();
 
+	hci_reset_all();
 	hci_cmd_complete(command_complete);
-	hci_reset();
+	hci_pin_req(pin_req);
+
+
 //	sdp_init();
 //	rfcomm_init();
 //	ppp_init();
@@ -221,7 +241,7 @@ int main(int argc, char **argv)
 
 	/* Host controller initialization for DTs according to LAN access point (LAP) and dial up networking (DUN) profile */
 	//bt_ip_start(NULL);
-
+	u8_t sendflag = 0;
 	while(1) {
 		phybusif_input(cb); /* Check for input */
 
@@ -242,7 +262,19 @@ int main(int argc, char **argv)
 			//rfcomm_tmr();
 			//ppp_tmr();
 			//nat_tmr();
-			if(++btiptmr == 240) { /* Akes server special */
+			if(++btiptmr == 5) { /* Akes server special */
+				//hci_read_local_features();
+				//hci_reset();
+			//	hci_set_event_filter(0x02, 0x00, &flag);
+				hci_read_buffer_size();
+			//	hci_write_scan_enable(0x03);
+				//hci_read_bd_addr(read_bdaddr_complete);
+				if(sendflag == 0)
+				{
+					sendflag = 1;
+					hci_read_buffer_size();
+					//hci_reset();
+				}
 			//	bt_ip_tmr();
 				btiptmr = 0;
 			}
@@ -251,12 +283,3 @@ int main(int argc, char **argv)
 
 	return 0;
 }
-/*-----------------------------------------------------------------------------------*/
-
-
-
-
-
-
-
-

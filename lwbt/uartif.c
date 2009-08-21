@@ -30,12 +30,12 @@
  *
  */
 
-/*-----------------------------------------------------------------------------------*/
+
 /* uartif.c
  *
  * Implementation of the HCI UART transport layer for Linux
  */
-/*-----------------------------------------------------------------------------------*/
+
 
 #include "arch/lwbtopts.h"
 #include "lwbt/phybusif.h"
@@ -47,69 +47,132 @@
 #include <termios.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <sys/ioctl.h>
 
 #define BAUDRATE B115200
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 
 int fd;
-/*-----------------------------------------------------------------------------------*/
+
 /* Initializes the physical bus interface
- */
-/*-----------------------------------------------------------------------------------*/
-void
-phybusif_init(const char * port)
+*/
+int set_speed(int fd, struct termios *ti, int speed)
 {
-  struct termios oldtio, newtio;
-  char * bootcmd = "boot 0004\n";
-
-  /* Open the device to be non-blocking (read will return immediatly) */
-  fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
-  if (fd <0) {perror(port); exit(-1); }
-  
-  /* Make the file descriptor asynchronous (the manual page says only
-     O_APPEND and O_NONBLOCK, will work with F_SETFL...) */
-  //fcntl(fd, F_SETFL, FASYNC);
-  
-  tcgetattr(fd,&oldtio); /* Save current port settings */
-  /* Set new port settings */
-  newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD; 
-  newtio.c_iflag = 0;
-  newtio.c_oflag = 0;
-  newtio.c_lflag = 0;
-  newtio.c_cc[VMIN] = 0; /* Block until at least this many chars have been received */
-  newtio.c_cc[VTIME] = 0; /* Timeout value */
-  
-  tcsetattr(fd,TCSANOW,&newtio);
-  tcflush(fd, TCIOFLUSH);
-
-  write(fd, bootcmd, strlen(bootcmd));
+	cfsetospeed(ti, speed);
+	cfsetispeed(ti, speed);
+	return tcsetattr(fd, TCSANOW, ti);
 }
-/*-----------------------------------------------------------------------------------*/
-err_t
-phybusif_reset(struct phybusif_cb *cb) 
+
+void phybusif_init(const char * port)
 {
-  /* Init new ctrl block */
-  /* Alloc new pbuf. lwIP will handle dealloc */
-  if((cb->p = pbuf_alloc(PBUF_RAW, PBUF_POOL_BUFSIZE, PBUF_POOL)) == NULL) {
-    LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_reset: Could not allocate memory for pbuf\n"));
-    return ERR_MEM; /* Could not allocate memory for pbuf */
-  }
-  cb->q = cb->p; /* Make p the pointer to the head of the pbuf chain and q to the tail */
-  
-  cb->tot_recvd = 0;
-  cb->recvd = 0; 
+	struct termios tio;
+	int i;
 
-  cb->state = W4_PACKET_TYPE;
-  return ERR_OK;
+	/* Open the device to be non-blocking (read will return immediatly) */
+	fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
+	if (fd <0) {
+		perror(port);
+		exit(-1);
+	}
+
+	/* Set new port settings */
+#if 0
+	tcflush(fd, TCIOFLUSH);
+
+	if (tcgetattr(fd, &tio) < 0) {
+		perror("Can't get port settings");
+		exit(-1);
+	}
+
+	cfmakeraw(&tio);
+
+	tio.c_cflag |= CS8 | CLOCAL | CREAD;
+	tio.c_cflag |= CRTSCTS;
+
+	if (tcsetattr(fd, TCSANOW, &tio) < 0) {
+		perror("Can't set port settings");
+		exit(-1);
+	}
+
+	/* Set initial baudrate */
+	if (set_speed(fd, &tio, BAUDRATE) < 0) {
+		perror("Can't set initial baud rate");
+		exit(-1);
+	}
+
+	tcflush(fd, TCIOFLUSH);
+
+	//if (send_break) {
+	//	tcsendbreak(fd, 0);
+	//	usleep(500000);
+	//}
+
+	tcflush(fd, TCIOFLUSH);
+
+	/* Set actual baudrate */
+	if (set_speed(fd, &tio, BAUDRATE) < 0) {
+		perror("Can't set baud rate");
+		exit(-1);
+	}
+
+	/* Set TTY to N_HCI line discipline */
+	i = 15; //N_HCI;
+	if (ioctl(fd, TIOCSETD, &i) < 0) {
+		perror("Can't set line discipline");
+		exit(-1);
+	}
+
+	if (ioctl(fd, _IOW('U', 200, int)/*HCIUARTSETPROTO*/, 0) < 0) {
+		perror("Can't set device proto");
+		exit(-1);
+	}
+#else
+	tcgetattr(fd,&tio); /* Save current port settings */
+	tio.c_cflag = CS8 | CREAD | CLOCAL | CRTSCTS; 
+	tio.c_iflag = 0;
+	tio.c_oflag = 0;
+	tio.c_lflag = 0;
+	tio.c_cc[VMIN] = 0; /* Block until at least this many chars have been received */
+	tio.c_cc[VTIME] = 0; /* Timeout value */
+
+	cfsetospeed(&tio, BAUDRATE);
+	cfsetispeed(&tio, BAUDRATE);
+
+	if(tcsetattr(fd,TCSANOW,&tio) < 0)
+		exit(-1);
+	tcflush(fd, TCIOFLUSH);
+#endif
 }
-/*-----------------------------------------------------------------------------------*/
-err_t
-phybusif_input(struct phybusif_cb *cb) 
+
+err_t phybusif_reset(struct phybusif_cb *cb) 
+{
+	/* Init new ctrl block */
+	/* Alloc new pbuf. lwIP will handle dealloc */
+	if((cb->p = pbuf_alloc(PBUF_RAW, PBUF_POOL_BUFSIZE, PBUF_POOL)) == NULL) {
+		LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_reset: Could not allocate memory for pbuf\n"));
+		return ERR_MEM; /* Could not allocate memory for pbuf */
+	}
+	cb->q = cb->p; /* Make p the pointer to the head of the pbuf chain and q to the tail */
+
+	cb->tot_recvd = 0;
+	cb->recvd = 0; 
+
+	cb->state = W4_PACKET_TYPE;
+	return ERR_OK;
+}
+
+err_t phybusif_input(struct phybusif_cb *cb) 
 {
 	unsigned char c;
 	unsigned char n;
 
 	while((n = read(fd,&c,1))) {
+		printf("got char: 0x%02x", c);
+		if(c < 127 && c > 32)
+			printf("(%c)\n", c);
+		else
+			printf("\n");
+
 		switch(cb->state) {
 			case W4_PACKET_TYPE:
 				switch(c) {
@@ -207,9 +270,8 @@ phybusif_input(struct phybusif_cb *cb)
 	}
 	return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
-	void
-phybusif_output(struct pbuf *p, u16_t len) 
+
+void phybusif_output(struct pbuf *p, u16_t len) 
 {
 	static struct pbuf *q;
 	static int i;
@@ -222,9 +284,10 @@ phybusif_output(struct pbuf *p, u16_t len)
 		ptr = q->payload;
 		for(i = 0; i < q->len && len; i++) {
 			c = *ptr++;
+			printf("sending %02x\n", c);
 			write(fd, &c, 1);
 			--len;
 		}
 	}
 }
-/*-----------------------------------------------------------------------------------*/
+

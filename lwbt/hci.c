@@ -223,9 +223,9 @@ struct hci_link * hci_get_link(struct bd_addr *bdaddr)
 /* 
  * hci_acl_input():
  *
- * Called by the physical bus interface. Handles host controller to host flow control,
- * finds a bluetooth address that correspond to the connection handle and forward the
- * packet to the L2CAP layer.
+ * Called by the physical bus interface. Handles host controller to host flow
+ * control, finds a bluetooth address that correspond to the connection handle
+ * and forward the packet to the L2CAP layer.
  */
 void hci_acl_input(struct pbuf *p)
 {
@@ -368,8 +368,8 @@ u8_t * hci_get_error_code(u8_t code)
 
 /* hci_event_input():
  *
- * Called by the physical bus interface. Parses the received event packet to determine 
- * which event occurred and handles it.
+ * Called by the physical bus interface. Parses the received event packet to
+ * determine which event occurred and handles it.
  */
 void hci_event_input(struct pbuf *p)
 {
@@ -577,24 +577,26 @@ void hci_event_input(struct pbuf *p)
 				default:
 					LWIP_DEBUGF(HCI_EV_DEBUG, ("hci_event_input: Command failed, %s\n", hci_get_error_code(((u8_t *)p->payload)[0])));
 					pbuf_header(p, -2); /* Adjust payload pointer not to cover
-										   Num_HCI_Command_Packets and status parameter */
+										   Num_HCI_Command_Packets and status
+										   parameter */
 					ocf = *((u16_t *)p->payload) & 0x03FF;
 					ogf = *((u16_t *)p->payload) >> 10;
-					pbuf_header(p, -2); /* Adjust payload pointer not to cover Command_Opcode
-										   parameter */
+					pbuf_header(p, -2); /* Adjust payload pointer not to cover
+										   Command_Opcode parameter */
 					HCI_EVENT_CMD_COMPLETE(pcb,ogf,ocf,((u8_t *)p->payload)[0],ret);
 					pbuf_header(p, 4);
 					break;
 			}
 			LWIP_DEBUGF(HCI_EV_DEBUG, ("Num_HCI_Command_Packets: 0x%x\n", ((u8_t *)p->payload)[1]));
-			pcb->numcmd += ((u8_t *)p->payload)[1]; /* Add number of completed command packets to the 
-													   number of command packets that the BT module 
-													   can buffer */
+			/* Add number of completed command packets to the number of command
+			 * packets that the BT module can buffer */
+			pcb->numcmd += ((u8_t *)p->payload)[1]; 
 			LWIP_DEBUGF(HCI_EV_DEBUG, ("Command_Opcode: 0x%x 0x%x\n", ((u8_t *)p->payload)[2], ((u8_t *)p->payload)[3]));
 			break;
 		case HCI_HARDWARE_ERROR:
 			LWIP_DEBUGF(HCI_EV_DEBUG, ("hci_event_input: Hardware Error\n"));
 			LWIP_DEBUGF(HCI_EV_DEBUG, ("Hardware_code: 0x%x\n\n", ((u8_t *)p->payload)[0]));
+			hci_reset();
 			//TODO: IS THIS FATAL??
 			break; 
 		case HCI_ROLE_CHANGE:
@@ -688,8 +690,8 @@ struct pbuf * hci_cmd_ass(struct pbuf *p, u8_t ocf, u8_t ogf, u8_t len)
 
 /* hci_inquiry():
  *
- * Cause the Host contoller to enter inquiry mode to discovery other nearby Bluetooth 
- * devices.
+ * Cause the Host contoller to enter inquiry mode to discovery other nearby
+ * Bluetooth devices.
  */
 err_t hci_inquiry(u32_t lap, u8_t inq_len, u8_t num_resp, err_t (* inq_complete)(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires, u16_t result))
 {
@@ -779,8 +781,8 @@ err_t hci_reject_connection_request(struct bd_addr *bdaddr, u8_t reason)
 
 /* hci_pin_code_request_reply():
  *
- * Used to reply to a PIN Code Request event from the Host Controller and specifies 
- * the PIN code to use for a connection.
+ * Used to reply to a PIN Code Request event from the Host Controller and
+ * specifies the PIN code to use for a connection.
  */
 err_t hci_pin_code_request_reply(struct bd_addr *bdaddr, u8_t pinlen, u8_t *pincode)
 {
@@ -809,8 +811,8 @@ err_t hci_pin_code_request_reply(struct bd_addr *bdaddr, u8_t pinlen, u8_t *pinc
 
 /* hci_pin_code_request_neg_reply():
  *
- * Used to reply to a PIN Code Request event from the Host Controller when the Host 
- * cannot specify a PIN code to use for a connection.
+ * Used to reply to a PIN Code Request event from the Host Controller when the
+ * Host cannot specify a PIN code to use for a connection.
  */
 err_t hci_pin_code_request_neg_reply(struct bd_addr *bdaddr)
 {
@@ -1074,8 +1076,8 @@ err_t hci_write_scan_enable(u8_t scan_enable)
 
 /* hci_write_cod():
  *
- * Write the value for the Class_of_Device parameter, which is used to indicate its 
- * capabilities to other devices.
+ * Write the value for the Class_of_Device parameter, which is used to indicate
+ * its capabilities to other devices.
  */
 err_t hci_write_cod(u8_t *cod)
 {
@@ -1120,8 +1122,8 @@ err_t hci_set_hc_to_h_fc(void)
 
 /* hci_host_buffer_size():
  *
- * Used by the Host to notify the Host Controller about the maximum size of the data 
- * portion of HCI ACL Data Packets sent from the Host Controller to the Host.
+ * Used by the Host to notify the Host Controller about the maximum size of the
+ * data portion of HCI ACL Data Packets sent from the Host Controller to the Host.
  */
 err_t hci_host_buffer_size(void)
 {
@@ -1146,8 +1148,8 @@ err_t hci_host_buffer_size(void)
 
 /* hci_host_num_comp_packets():
  *
- * Used by the Host to indicate to the Host Controller the number of HCI Data Packets 
- * that have been completed for each Connection Handle since the previous 
+ * Used by the Host to indicate to the Host Controller the number of HCI Data
+ * Packets that have been completed for each Connection Handle since the previous 
  * Host_Number_Of_Completed_Packets command was sent to the Host Controller.
  */
 err_t hci_host_num_comp_packets(u16_t conhdl, u16_t num_complete)
@@ -1184,6 +1186,26 @@ err_t hci_read_buffer_size(void)
 	} 
 	/* Assembling command packet */
 	p = hci_cmd_ass(p, HCI_R_BUF_SIZE_OCF, HCI_INFO_PARAM_OGF, HCI_R_BUF_SIZE_PLEN);
+	/* Assembling cmd prameters */
+	phybusif_output(p, p->tot_len);
+	pbuf_free(p);
+
+	return ERR_OK;
+}
+
+/* hci_read_local_features()
+ *
+ * Read the features of the connected module
+ */
+err_t hci_read_local_features(void)
+{
+	struct pbuf *p;
+	if((p = pbuf_alloc(PBUF_RAW, HCI_R_BUF_SIZE_PLEN, PBUF_RAM)) == NULL) {
+		LWIP_DEBUGF(HCI_DEBUG, ("hci_read_buffer_size: Could not allocate memory for pbuf\n"));
+		return ERR_MEM;
+	} 
+	/* Assembling command packet */
+	p = hci_cmd_ass(p, HCI_R_SUPPORTED_LOCAL_FEATURES_OCF, HCI_INFO_PARAM_OGF, HCI_R_SUPPORTED_LOCAL_FEATURES_PLEN);
 	/* Assembling cmd prameters */
 	phybusif_output(p, p->tot_len);
 	pbuf_free(p);
