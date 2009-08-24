@@ -67,6 +67,13 @@ void phybusif_init(const char * port)
 {
 	struct termios tio;
 	int i;
+	u8_t dummy;
+	u8_t initpacket[] = {0x01, 0x00, 0xfc, 0x17, 
+		0xc2, 0x00, 0x00, 0x09, 0x00,
+		0x00, 0x00, 0x19, 0x28, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00};
 
 	/* Open the device to be non-blocking (read will return immediatly) */
 	fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
@@ -116,16 +123,16 @@ void phybusif_init(const char * port)
 	}
 
 	/* Set TTY to N_HCI line discipline */
-	i = 15; //N_HCI;
-	if (ioctl(fd, TIOCSETD, &i) < 0) {
-		perror("Can't set line discipline");
-		exit(-1);
-	}
-
-	if (ioctl(fd, _IOW('U', 200, int)/*HCIUARTSETPROTO*/, 0) < 0) {
-		perror("Can't set device proto");
-		exit(-1);
-	}
+//	i = 15; //N_HCI;
+//	if (ioctl(fd, TIOCSETD, &i) < 0) {
+//		perror("Can't set line discipline");
+//		exit(-1);
+//	}
+//
+//	if (ioctl(fd, _IOW('U', 200, int)/*HCIUARTSETPROTO*/, 0) < 0) {
+//		perror("Can't set device proto");
+//		exit(-1);
+//	}
 #else
 	tcgetattr(fd,&tio); /* Save current port settings */
 	tio.c_cflag = CS8 | CREAD | CLOCAL | CRTSCTS; 
@@ -141,6 +148,9 @@ void phybusif_init(const char * port)
 	if(tcsetattr(fd,TCSANOW,&tio) < 0)
 		exit(-1);
 	tcflush(fd, TCIOFLUSH);
+
+//	write(fd, initpacket, 0x17+4);
+
 #endif
 }
 
@@ -277,6 +287,7 @@ void phybusif_output(struct pbuf *p, u16_t len)
 	static int i;
 	static unsigned char *ptr;
 	unsigned char c;
+	unsigned int bailout;
 
 	/* Send pbuf on UART */
 	LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_output: Send pbuf on UART\n"));
@@ -285,7 +296,15 @@ void phybusif_output(struct pbuf *p, u16_t len)
 		for(i = 0; i < q->len && len; i++) {
 			c = *ptr++;
 			printf("sending %02x\n", c);
-			write(fd, &c, 1);
+
+			bailout = 0;
+			while(write(fd, &c, 1) < 0) //keep trying until it's sent
+				if(++bailout == 0xfff)
+				{
+					perror("Failed to send byte");
+					break;
+				}
+
 			--len;
 		}
 	}

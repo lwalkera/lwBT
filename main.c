@@ -266,13 +266,14 @@ int main(int argc, char **argv)
 				//hci_read_local_features();
 				//hci_reset();
 			//	hci_set_event_filter(0x02, 0x00, &flag);
-				hci_read_buffer_size();
+				//hci_read_buffer_size();
 			//	hci_write_scan_enable(0x03);
 				//hci_read_bd_addr(read_bdaddr_complete);
 				if(sendflag == 0)
 				{
 					sendflag = 1;
-					hci_read_buffer_size();
+					hci_read_local_features();
+					//hci_read_buffer_size();
 					//hci_reset();
 				}
 			//	bt_ip_tmr();
