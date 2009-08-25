@@ -31,7 +31,7 @@
  */
 
 
-/* bt_ip_lap.c
+/* bt_iap_lap.c
  *
  * This is a control application that initialises a host controller and connects to a 
  * network as a DT through a DUN or LAP enabled device. When a network connection has 
@@ -58,28 +58,13 @@
 
 #define BT_IP_DEBUG DBG_ON /* Controls debug messages */
 
-enum bt_profile {
-	LAP_PROFILE, DUN_PROFILE
-};
-
 struct bt_state {
 	enum bt_profile profile;
-	struct tcp_pcb *tcppcb;
 	struct bd_addr bdaddr;
 	struct pbuf *p;
 	u8_t btctrl;
 	u8_t cn;
-} bt_ip_state;
-
-/* Forward declarations */
-/*err_t rfcomm_connected(void *arg, struct rfcomm_pcb *tpcb, err_t err);
-  err_t l2cap_connected(void *arg, struct l2cap_pcb *pcb, u16_t result, u16_t status);
-  err_t inquiry_complete(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires, u16_t result);
-  err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t result);
-  err_t pin_req(void *arg, struct bd_addr *bdaddr);
-
-  err_t http_accept(void *arg, struct tcp_pcb *pcb, err_t err);
-  void nat_reset_all(void);*/
+} bt_iap_state;
 
 static const u8_t lap_service_record[] = {
 	0x35, 0x8, 
@@ -90,61 +75,55 @@ static const u8_t lap_service_record[] = {
 	0x9, 0x0, 0x4, 0x35, 0xc, 0x35, 0x3, 0x19, 0x1, 0x0, 0x35, 0x5, 0x19, 0x0, 0x3, 0x8, 0x1 /* Protocol descriptor list attribute */
 };
 
-u8_t bt_ip_netifn;
-
-
 /* 
- * bt_ip_start():
+ * bt_iap_start():
  *
  * Called by the main application to initialize and connect to a network
  *
  */
-void bt_ip_start(void)
+void bt_iap_start(void)
 {
 	hci_reset_all();
 	l2cap_reset_all();
 	sdp_reset_all();
 	rfcomm_reset_all();
-	//ppp_reset_all();
 
-	LWIP_DEBUGF(BT_IP_DEBUG, ("bt_ip_start\n"));
+	LWIP_DEBUGF(BT_IP_DEBUG, ("bt_iap_start\n"));
 
 	hci_cmd_complete(command_complete);
 	hci_pin_req(pin_req);
-	bt_ip_state.btctrl = 0;
-	bt_ip_state.p = NULL;
-	bt_ip_state.tcppcb = NULL;
-	bt_ip_netifn = 0;
+	bt_iap_state.btctrl = 0;
+	bt_iap_state.p = NULL;
 	hci_reset();
 }
 
 /* 
- * bt_ip_tmr():
+ * bt_iap_tmr():
  *
  * Called by the main application to initialize and connect to a network
  *
  */
-void bt_ip_tmr(void)
+void bt_iap_tmr(void)
 {
 	u8_t update_cmd[12];
 
 	update_cmd[0] = 1;
 	update_cmd[1] = 0;
-	update_cmd[2] = bt_ip_state.bdaddr.addr[5];
-	update_cmd[3] = bt_ip_state.bdaddr.addr[4]; 
-	update_cmd[4] = bt_ip_state.bdaddr.addr[3];
-	update_cmd[5] = bt_ip_state.bdaddr.addr[2]; 
-	update_cmd[6] = bt_ip_state.bdaddr.addr[1];
-	update_cmd[7] = bt_ip_state.bdaddr.addr[0];
+	update_cmd[2] = bt_iap_state.bdaddr.addr[5];
+	update_cmd[3] = bt_iap_state.bdaddr.addr[4]; 
+	update_cmd[4] = bt_iap_state.bdaddr.addr[3];
+	update_cmd[5] = bt_iap_state.bdaddr.addr[2]; 
+	update_cmd[6] = bt_iap_state.bdaddr.addr[1];
+	update_cmd[7] = bt_iap_state.bdaddr.addr[0];
 	update_cmd[8] = 0x00;
 	update_cmd[9] = 0x00;
 	update_cmd[10] = 0x00;
 	update_cmd[11] = 0x00;
 
-	LWIP_DEBUGF(BT_IP_DEBUG, ("bt_ip_tmr: Update cmd bd address: 0x%x:0x%x:0x%x:0x%x:0x%x:0x%x\n", update_cmd[2], update_cmd[3], update_cmd[4], update_cmd[5], update_cmd[6], update_cmd[7]));
+	LWIP_DEBUGF(BT_IP_DEBUG, ("bt_iap_tmr: Update cmd bd address: 0x%x:0x%x:0x%x:0x%x:0x%x:0x%x\n", update_cmd[2], update_cmd[3], update_cmd[4], update_cmd[5], update_cmd[6], update_cmd[7]));
 
-	if(bt_ip_state.tcppcb != NULL) {
-		tcp_write(bt_ip_state.tcppcb, &update_cmd, 12, 1);
+	if(bt_iap_state.tcppcb != NULL) {
+		tcp_write(bt_iap_state.tcppcb, &update_cmd, 12, 1);
 	}
 }
 
@@ -191,7 +170,7 @@ err_t l2cap_disconnected_ind(void *arg, struct l2cap_pcb *pcb, err_t err)
 		 * If ACL link already is down we get an ERR_CONN returned */
 		hci_disconnect(&(pcb->remote_bdaddr), HCI_OTHER_END_TERMINATED_CONN_USER_ENDED);
 		l2cap_close(pcb);
-		bt_ip_start();
+		bt_iap_start();
 	}
 
 	return ret;
@@ -207,7 +186,7 @@ err_t l2cap_disconnected_ind(void *arg, struct l2cap_pcb *pcb, err_t err)
 err_t bluetoothif_init(struct netif *netif)
 {
 	netif->name[0] = 'b';
-	netif->name[1] = '0' + bt_ip_netifn++;
+	netif->name[1] = '0' + bt_iap_netifn++;
 	netif->output = ppp_netif_output;
 
 	netif->state = NULL;
@@ -233,14 +212,14 @@ err_t tcp_connected(void *arg, struct tcp_pcb *pcb, err_t err)
 	update_cmd[0] = 1;
 	update_cmd[1] = 0;
 
-	update_cmd[2] = bt_ip_state.bdaddr.addr[5];
-	update_cmd[3] = bt_ip_state.bdaddr.addr[4]; 
-	update_cmd[4] = bt_ip_state.bdaddr.addr[3];
-	update_cmd[5] = bt_ip_state.bdaddr.addr[2]; 
-	update_cmd[6] = bt_ip_state.bdaddr.addr[1];
-	update_cmd[7] = bt_ip_state.bdaddr.addr[0];
+	update_cmd[2] = bt_iap_state.bdaddr.addr[5];
+	update_cmd[3] = bt_iap_state.bdaddr.addr[4]; 
+	update_cmd[4] = bt_iap_state.bdaddr.addr[3];
+	update_cmd[5] = bt_iap_state.bdaddr.addr[2]; 
+	update_cmd[6] = bt_iap_state.bdaddr.addr[1];
+	update_cmd[7] = bt_iap_state.bdaddr.addr[0];
 
-	LWIP_DEBUGF(BT_IP_DEBUG, ("tcp_connected: bd address: 0x%x:0x%x:0x%x:0x%x:0x%x:0x%x\n", bt_ip_state.bdaddr.addr[0], bt_ip_state.bdaddr.addr[1], bt_ip_state.bdaddr.addr[2], bt_ip_state.bdaddr.addr[3], bt_ip_state.bdaddr.addr[4], bt_ip_state.bdaddr.addr[5]));
+	LWIP_DEBUGF(BT_IP_DEBUG, ("tcp_connected: bd address: 0x%x:0x%x:0x%x:0x%x:0x%x:0x%x\n", bt_iap_state.bdaddr.addr[0], bt_iap_state.bdaddr.addr[1], bt_iap_state.bdaddr.addr[2], bt_iap_state.bdaddr.addr[3], bt_iap_state.bdaddr.addr[4], bt_iap_state.bdaddr.addr[5]));
 	LWIP_DEBUGF(BT_IP_DEBUG, ("tcp_connected: Update cmd bd address: 0x%x:0x%x:0x%x:0x%x:0x%x:0x%x\n", update_cmd[2], update_cmd[3], update_cmd[4], update_cmd[5], update_cmd[6], update_cmd[7]));
 
 	update_cmd[8] = 0x00;
@@ -252,9 +231,9 @@ err_t tcp_connected(void *arg, struct tcp_pcb *pcb, err_t err)
 
 	LWIP_DEBUGF(BT_IP_DEBUG, ("tcp_connected: Update command sent\n"));
 
-	bt_ip_state.tcppcb = pcb;
+	bt_iap_state.tcppcb = pcb;
 
-	return http_accept((void *)&(bt_ip_state.bdaddr), pcb, ERR_OK);
+	return http_accept((void *)&(bt_iap_state.bdaddr), pcb, ERR_OK);
 }
 
 
@@ -483,7 +462,7 @@ err_t ppp_connected(void *arg, struct ppp_pcb *pcb, err_t err)
 
 	ret = lap_init(); /* Initialize the LAP role */
 
-	//if(bt_ip_state.profile == DUN_PROFILE) {
+	//if(bt_iap_state.profile == DUN_PROFILE) {
 	/* Make LAP discoverable */
 	hci_cmd_complete(command_complete);
 	hci_set_event_filter(0x02, 0x00, &flag); /* Auto accept all connections with role switch enabled */
@@ -665,7 +644,7 @@ err_t rfcomm_connected(void *arg, struct rfcomm_pcb *pcb, err_t err)
 		LWIP_DEBUGF(BT_IP_DEBUG, ("rfcomm_connected. CN = %d\n", rfcomm_cn(pcb)));
 		rfcomm_disc(pcb, rfcomm_disconnected);
 
-		if(bt_ip_state.profile == DUN_PROFILE) {
+		if(bt_iap_state.profile == DUN_PROFILE) {
 			/* Establish a GPRS connection */
 			LWIP_DEBUGF(BT_IP_DEBUG, ("rfcomm_msc_rsp: Establish a GPRS connection\n"));
 			rfcomm_recv(pcb, at_input);
@@ -706,7 +685,7 @@ err_t rfcomm_connected(void *arg, struct rfcomm_pcb *pcb, err_t err)
 		LWIP_DEBUGF(BT_IP_DEBUG, ("rfcomm_connected. Connection attempt failed CN = %d\n", rfcomm_cn(pcb)));
 		l2cap_close(pcb->l2cappcb);
 		rfcomm_close(pcb);
-		bt_ip_start();
+		bt_iap_start();
 	}
 	return ERR_OK;
 }
@@ -725,20 +704,20 @@ void sdp_attributes_recv(void *arg, struct sdp_pcb *sdppcb, u16_t attribl_bc, st
 
 	l2ca_disconnect_req(sdppcb->l2cappcb, l2cap_disconnected_cfm);
 	/* Get the RFCOMM channel identifier from the protocol descriptor list */
-	if((bt_ip_state.cn = get_rfcomm_cn(attribl_bc, p)) != 0) {
+	if((bt_iap_state.cn = get_rfcomm_cn(attribl_bc, p)) != 0) {
 		if((l2cappcb = l2cap_new()) == NULL) {
 			LWIP_DEBUGF(BT_IP_DEBUG, ("sdp_attributes_recv: Could not alloc L2CAP pcb\n"));
 			return;
 		}
-		LWIP_DEBUGF(BT_IP_DEBUG, ("sdp_attributes_recv: RFCOMM channel: %d\n", bt_ip_state.cn));
-		if(bt_ip_state.profile == DUN_PROFILE) {
+		LWIP_DEBUGF(BT_IP_DEBUG, ("sdp_attributes_recv: RFCOMM channel: %d\n", bt_iap_state.cn));
+		if(bt_iap_state.profile == DUN_PROFILE) {
 			l2ca_connect_req(l2cappcb, &(sdppcb->l2cappcb->remote_bdaddr), RFCOMM_PSM, 0, l2cap_connected);
 		} else {
 			l2ca_connect_req(l2cappcb, &(sdppcb->l2cappcb->remote_bdaddr), RFCOMM_PSM, HCI_ALLOW_ROLE_SWITCH, l2cap_connected);
 		}
 
 	} else {
-		bt_ip_start();
+		bt_iap_start();
 	}
 	sdp_free(sdppcb);
 }
@@ -768,7 +747,7 @@ err_t l2cap_connected(void *arg, struct l2cap_pcb *l2cappcb, u16_t result, u16_t
 		switch(l2cap_psm(l2cappcb)) {
 			case SDP_PSM:
 				LWIP_DEBUGF(BT_IP_DEBUG, ("l2cap_connected: SDP L2CAP configured. Result = %d\n", result));
-				if(bt_ip_state.profile == DUN_PROFILE) {
+				if(bt_iap_state.profile == DUN_PROFILE) {
 					LWIP_DEBUGF(BT_IP_DEBUG, ("l2cap_connected: Using DUN profile\n"));
 					ssp[4] = 0x03; /* Change service search pattern to contain DUN UUID */
 				} else {
@@ -786,7 +765,7 @@ err_t l2cap_connected(void *arg, struct l2cap_pcb *l2cappcb, u16_t result, u16_t
 						sdp_attributes_recv);
 				return ret;
 			case RFCOMM_PSM:
-				LWIP_DEBUGF(BT_IP_DEBUG, ("l2cap_connected: RFCOMM L2CAP configured. Result = %d CN = %d\n", result, bt_ip_state.cn));
+				LWIP_DEBUGF(BT_IP_DEBUG, ("l2cap_connected: RFCOMM L2CAP configured. Result = %d CN = %d\n", result, bt_iap_state.cn));
 				l2cap_recv(l2cappcb, rfcomm_input);
 
 				if((rfcommpcb = rfcomm_new(l2cappcb)) == NULL) {
@@ -796,14 +775,14 @@ err_t l2cap_connected(void *arg, struct l2cap_pcb *l2cappcb, u16_t result, u16_t
 
 				hci_link_key_not(link_key_not); /* Set function to be called if a new link key is created */
 
-				return rfcomm_connect(rfcommpcb, bt_ip_state.cn, rfcomm_connected); /* Connect with DLCI 0 */
+				return rfcomm_connect(rfcommpcb, bt_iap_state.cn, rfcomm_connected); /* Connect with DLCI 0 */
 			default:
 				return ERR_VAL;
 		}
 	} else {
 		LWIP_DEBUGF(BT_IP_DEBUG, ("l2cap_connected: L2CAP not connected. Redo inquiry\n"));
 		l2cap_close(l2cappcb);
-		bt_ip_start();
+		bt_iap_start();
 	}
 
 	return ERR_OK;
@@ -828,9 +807,9 @@ err_t inquiry_complete(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires,
 			LWIP_DEBUGF(BT_IP_DEBUG, ("ires->bdaddr 0x%x:0x%x:0x%x:0x%x:0x%x:0x%x\n", ires->bdaddr.addr[5], ires->bdaddr.addr[4], ires->bdaddr.addr[3], ires->bdaddr.addr[2], ires->bdaddr.addr[1], ires->bdaddr.addr[0]));
 
 			if((ires->cod[1] & 0x1F) == 0x03) {
-				bt_ip_state.profile = LAP_PROFILE;
+				bt_iap_state.profile = LAP_PROFILE;
 			} else {
-				bt_ip_state.profile = DUN_PROFILE;
+				bt_iap_state.profile = DUN_PROFILE;
 			}
 
 			if((l2cappcb = l2cap_new()) == NULL) {
@@ -838,7 +817,7 @@ err_t inquiry_complete(void *arg, struct hci_pcb *pcb, struct hci_inq_res *ires,
 				return ERR_MEM;
 			} 
 
-			if(bt_ip_state.profile == DUN_PROFILE) {
+			if(bt_iap_state.profile == DUN_PROFILE) {
 				l2ca_connect_req(l2cappcb, &(ires->bdaddr), SDP_PSM, 0, l2cap_connected);
 			} else {
 				l2ca_connect_req(l2cappcb, &(ires->bdaddr), SDP_PSM, HCI_ALLOW_ROLE_SWITCH, l2cap_connected);
@@ -884,7 +863,7 @@ err_t acl_conn_complete(void *arg, struct bd_addr *bdaddr)
  */
 err_t read_bdaddr_complete(void *arg, struct bd_addr *bdaddr)
 {
-	memcpy(&(bt_ip_state.bdaddr), bdaddr, 6);
+	memcpy(&(bt_iap_state.bdaddr), bdaddr, 6);
 	return ERR_OK;
 }
 
@@ -953,9 +932,9 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 				case HCI_SET_EVENT_FILTER:
 					if(result == HCI_SUCCESS) {
 						LWIP_DEBUGF(BT_IP_DEBUG, ("successful HCI_SET_EVENT_FILTER.\n"));
-						if(bt_ip_state.btctrl == 0) {
+						if(bt_iap_state.btctrl == 0) {
 							hci_write_cod(cod_lap); /*  */
-							bt_ip_state.btctrl = 1;
+							bt_iap_state.btctrl = 1;
 						} else {
 							hci_write_scan_enable(0x03); /* Inquiry and page scan enabled */
 						}
@@ -976,9 +955,9 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 				case HCI_WRITE_COD:
 					if(result == HCI_SUCCESS) {
 						LWIP_DEBUGF(BT_IP_DEBUG, ("Successful HCI_WRITE_COD.\n"));
-						n1 = (u8_t)(bt_ip_state.bdaddr.addr[0] / 100);
-						n2 = (u8_t)(bt_ip_state.bdaddr.addr[0] / 10) - n1 * 10;
-						n3 = bt_ip_state.bdaddr.addr[0] - n1 * 100 - n2 * 10;
+						n1 = (u8_t)(bt_iap_state.bdaddr.addr[0] / 100);
+						n2 = (u8_t)(bt_iap_state.bdaddr.addr[0] / 10) - n1 * 10;
+						n3 = bt_iap_state.bdaddr.addr[0] - n1 * 100 - n2 * 10;
 						devname[7] = '0' + n1;
 						devname[8] = '0' + n2;
 						devname[9] = '0' + n3;

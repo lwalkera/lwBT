@@ -8,4 +8,6 @@ lwbt/lwbt_memp.c
 lwbt/hci.c
 lwbt/uartif.c
 lwbt/l2cap.c
+lwbt/sdp.c
+lwbt/rfcomm.c
 main.c

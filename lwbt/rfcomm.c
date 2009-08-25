@@ -38,11 +38,11 @@
  */
 
 
-#include "netif/lwbt/l2cap.h"
-#include "netif/lwbt/rfcomm.h"
-#include "netif/lwbt/lwbt_memp.h"
-#include "netif/lwbt/fcs.h"
-#include "lwbtopts.h"
+#include "lwbt/l2cap.h"
+#include "lwbt/rfcomm.h"
+#include "lwbt/lwbt_memp.h"
+#include "lwbt/fcs.h"
+#include "arch/lwbtopts.h"
 #include "lwip/debug.h"
 
 struct rfcomm_pcb_listen *rfcomm_listen_pcbs; /* List of all RFCOMM PCBs listening for 
@@ -60,9 +60,7 @@ struct rfcomm_pcb *rfcomm_get_active_pcb(u8_t cn, struct bd_addr *bdaddr);
  * 
  * Initializes the rfcomm layer.
  */
-
-	void
-rfcomm_init(void)
+void rfcomm_init(void)
 {
 	/* Clear globals */
 	rfcomm_listen_pcbs = NULL;
@@ -77,9 +75,7 @@ rfcomm_init(void)
  * removes a DLC if it has been waiting for a response enough
  * time.
  */
-
-	void
-rfcomm_tmr(void)
+void rfcomm_tmr(void)
 {
 	struct rfcomm_pcb *pcb, *tpcb;
 	err_t ret;
@@ -117,9 +113,7 @@ rfcomm_tmr(void)
  * Called by the application to indicate that the lower protocol disconnected. Closes
  * any active PCBs in the lists
  */
-
-	err_t
-rfcomm_lp_disconnected(struct l2cap_pcb *l2cappcb)
+err_t rfcomm_lp_disconnected(struct l2cap_pcb *l2cappcb)
 {
 	struct rfcomm_pcb *pcb, *tpcb;
 	err_t ret = ERR_OK;
@@ -143,9 +137,7 @@ rfcomm_lp_disconnected(struct l2cap_pcb *l2cappcb)
  * Creates a new RFCOMM protocol control block but doesn't place it on
  * any of the RFCOMM PCB lists.
  */
-
-	struct rfcomm_pcb *
-rfcomm_new(struct l2cap_pcb *l2cappcb) 
+struct rfcomm_pcb * rfcomm_new(struct l2cap_pcb *l2cappcb) 
 {
 	struct rfcomm_pcb *pcb;
 
@@ -169,9 +161,7 @@ rfcomm_new(struct l2cap_pcb *l2cappcb)
  *
  * Closes the RFCOMM protocol control block.
  */
-
-	void
-rfcomm_close(struct rfcomm_pcb *pcb) 
+void rfcomm_close(struct rfcomm_pcb *pcb) 
 {
 #if RFCOMM_FLOW_QUEUEING
 	if(pcb->buf != NULL) {
@@ -193,9 +183,7 @@ rfcomm_close(struct rfcomm_pcb *pcb)
  *
  * Closes all active and listening RFCOMM protocol control blocks.
  */
-
-	void
-rfcomm_reset_all(void) 
+void rfcomm_reset_all(void) 
 {
 	struct rfcomm_pcb *pcb, *tpcb;
 	struct rfcomm_pcb_listen *lpcb, *tlpcb;
@@ -221,8 +209,8 @@ rfcomm_reset_all(void)
  * Return the active PCB with the matching Bluetooth address and channel number.
  */
 
-struct rfcomm_pcb *
-rfcomm_get_active_pcb(u8_t cn, struct bd_addr *bdaddr) {
+struct rfcomm_pcb * rfcomm_get_active_pcb(u8_t cn, struct bd_addr *bdaddr)
+{
 	struct rfcomm_pcb *pcb;
 	for(pcb = rfcomm_active_pcbs; pcb != NULL; pcb = pcb->next) {
 		if(pcb->cn == cn && bd_addr_cmp(&(pcb->l2cappcb->remote_bdaddr), 
@@ -238,9 +226,7 @@ rfcomm_get_active_pcb(u8_t cn, struct bd_addr *bdaddr) {
  *
  * Sends a RFCOMM disconnected mode frame in response to a command when disconnected.
  */
-
-	static err_t
-rfcomm_dm(struct l2cap_pcb *pcb, struct rfcomm_hdr *hdr) 
+static err_t rfcomm_dm(struct l2cap_pcb *pcb, struct rfcomm_hdr *hdr) 
 {
 	struct pbuf *p;
 	struct rfcomm_hdr *rfcommhdr;
@@ -270,11 +256,8 @@ rfcomm_dm(struct l2cap_pcb *pcb, struct rfcomm_hdr *hdr)
  * Sends a RFCOMM start asynchronous balanced mode frame to startup the channel. Also
  * specify the function to be called when the channel has been connected.
  */
-
-	err_t
-rfcomm_connect(struct rfcomm_pcb *pcb, u8_t cn, err_t (* connected)(void *arg,
-			struct rfcomm_pcb *tpcb,
-			err_t err))
+err_t rfcomm_connect(struct rfcomm_pcb *pcb, u8_t cn,
+		err_t (* connected)(void *arg, struct rfcomm_pcb *tpcb,	err_t err))
 {
 	struct rfcomm_hdr *hdr;
 	struct pbuf *p;
@@ -329,9 +312,7 @@ rfcomm_connect(struct rfcomm_pcb *pcb, u8_t cn, err_t (* connected)(void *arg,
  *
  * Sends a RFCOMM disconnect frame to close the channel.
  */
-
-	err_t
-rfcomm_disconnect(struct rfcomm_pcb *pcb)
+err_t rfcomm_disconnect(struct rfcomm_pcb *pcb)
 {
 	struct rfcomm_hdr *hdr;
 	struct pbuf *p;
@@ -365,9 +346,8 @@ rfcomm_disconnect(struct rfcomm_pcb *pcb)
  *
  * Sends a RFCOMM unnumbered acknowledgement to respond to a connection request.
  */
-
-	static err_t //RESPONDER
-rfcomm_ua(struct l2cap_pcb *pcb, struct rfcomm_hdr *hdr) 
+static err_t rfcomm_ua(struct l2cap_pcb *pcb, struct rfcomm_hdr *hdr)
+	//RESPONDER
 {
 	struct pbuf *p;
 	struct rfcomm_hdr *rfcommhdr;
@@ -399,9 +379,7 @@ rfcomm_ua(struct l2cap_pcb *pcb, struct rfcomm_hdr *hdr)
  * of a data link connection. Also specify the function to be called when a PN 
  * response is received
  */
-
-	err_t
-rfcomm_pn(struct rfcomm_pcb *pcb, 
+err_t rfcomm_pn(struct rfcomm_pcb *pcb, 
 		err_t (* pn_rsp)(void *arg, struct rfcomm_pcb *pcb, err_t err))
 {
 	struct pbuf *p;
@@ -448,9 +426,7 @@ rfcomm_pn(struct rfcomm_pcb *pcb,
  *
  * .
  */
-
-	err_t
-rfcomm_test(struct rfcomm_pcb *pcb, err_t (* test_rsp)(void *arg, struct rfcomm_pcb *tpcb, err_t err)) 
+err_t rfcomm_test(struct rfcomm_pcb *pcb, err_t (* test_rsp)(void *arg, struct rfcomm_pcb *tpcb, err_t err)) 
 {
 	struct pbuf *p;
 	struct rfcomm_msg_hdr *cmdhdr;
@@ -486,9 +462,7 @@ rfcomm_test(struct rfcomm_pcb *pcb, err_t (* test_rsp)(void *arg, struct rfcomm_
  * Sends a RFCOMM modem status multiplexer frame. Also specify the function to be 
  * called when a MSC response is received.
  */
-
-	err_t
-rfcomm_msc(struct rfcomm_pcb *pcb, u8_t fc, 
+err_t rfcomm_msc(struct rfcomm_pcb *pcb, u8_t fc, 
 		err_t (* msc_rsp)(void *arg, struct rfcomm_pcb *pcb, err_t err))
 {
 	struct pbuf *p;
@@ -532,10 +506,9 @@ rfcomm_msc(struct rfcomm_pcb *pcb, u8_t fc,
  * Sends a RFCOMM remote port negotiation multiplexer frame to set communication 
  * settings at the remote end of the data link connection.
  */
-
-	err_t //INITIATOR
-rfcomm_rpn(struct rfcomm_pcb *pcb, u8_t br,
+err_t rfcomm_rpn(struct rfcomm_pcb *pcb, u8_t br,
 		err_t (* rpn_rsp)(void *arg, struct rfcomm_pcb *pcb, err_t err))
+	 //INITIATOR
 {
 	struct pbuf *p;
 	struct rfcomm_msg_hdr *cmdhdr;
@@ -578,9 +551,8 @@ rfcomm_rpn(struct rfcomm_pcb *pcb, u8_t br,
  *
  * Sends a RFCOMM unnumbered information frame with header check.
  */
-
-	err_t //RESPONDER & INITIATOR
-rfcomm_uih(struct rfcomm_pcb *pcb, u8_t cn, struct pbuf *q) 
+err_t rfcomm_uih(struct rfcomm_pcb *pcb, u8_t cn, struct pbuf *q)
+	//RESPONDER & INITIATOR
 {
 	struct pbuf *p, *r;
 	err_t ret;
@@ -688,9 +660,8 @@ rfcomm_uih(struct rfcomm_pcb *pcb, u8_t cn, struct pbuf *q)
  * Sends a RFCOMM unnumbered information frame with header check and credit based 
  * flow control.
  */
-
-	err_t //RESPONDER & INITIATOR
-rfcomm_uih_credits(struct rfcomm_pcb *pcb, u8_t credits, struct pbuf *q) 
+err_t rfcomm_uih_credits(struct rfcomm_pcb *pcb, u8_t credits, struct pbuf *q)
+	//RESPONDER & INITIATOR
 {
 	struct pbuf *p, *r;
 	err_t ret;
@@ -798,10 +769,7 @@ rfcomm_uih_credits(struct rfcomm_pcb *pcb, u8_t credits, struct pbuf *q)
  *
  * Parses the received RFCOMM message and handles it.
  */
-
-	void
-rfcomm_process_msg(struct rfcomm_pcb *pcb, struct rfcomm_hdr *rfcommhdr, struct l2cap_pcb *l2cappcb,
-		struct pbuf *p)
+void rfcomm_process_msg(struct rfcomm_pcb *pcb, struct rfcomm_hdr *rfcommhdr, struct l2cap_pcb *l2cappcb, struct pbuf *p)
 {
 	struct rfcomm_msg_hdr *cmdhdr, *rsphdr;
 	struct rfcomm_pn_msg *pnreq;
@@ -1092,9 +1060,7 @@ rfcomm_process_msg(struct rfcomm_pcb *pcb, struct rfcomm_hdr *rfcommhdr, struct 
  * Called by the lower layer. Does a frame check, parses the header and forward it to 
  * the upper layer or handle the command frame.
  */
-
-	err_t
-rfcomm_input(void *arg, struct l2cap_pcb *l2cappcb, struct pbuf *p, err_t err)
+err_t rfcomm_input(void *arg, struct l2cap_pcb *l2cappcb, struct pbuf *p, err_t err)
 {
 	struct rfcomm_hdr rfcommhdr;
 	struct rfcomm_pcb *pcb, *tpcb;
@@ -1154,326 +1120,318 @@ rfcomm_input(void *arg, struct l2cap_pcb *l2cappcb, struct pbuf *p, err_t err)
 	if(rfcommhdr.ctrl == RFCOMM_UIH) {
 		if(pcb->cn == 0) {
 			if(fcs != pcb->uih0_in_fcs) { /* Check against the precalculated fcs */
-				//if(fcs8_crc_check(p, RFCOMM_UIHCRC_CHECK_LEN, fcs) != 0) {
+				/*if(fcs8_crc_check(p, RFCOMM_UIHCRC_CHECK_LEN, fcs) != 0)  */
 				/* Packet discarded due to failing frame check sequence */
 				LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: UIH packet discarded due to failing frame check sequence\n"));
 				pbuf_free(p);
 				return ERR_OK;
 			}
-			}
-		} else if(rfcommhdr.ctrl == RFCOMM_UIH) {
-			if(fcs != pcb->uih_in_fcs) { /* Check against the precalculated fcs */
-				//if(fcs8_crc_check(p, RFCOMM_UIHCRC_CHECK_LEN, fcs) != 0) {
-				/* Packet discarded due to failing frame check sequence */
-				LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: UIH packet discarded due to failing frame check sequence\n"));
-				pbuf_free(p);
-				return ERR_OK;
-			}
-			} else if(rfcommhdr.ctrl == RFCOMM_UIH_PF) {
-				if(fcs != pcb->uihpf_in_fcs) { /* Check against the precalculated fcs */
-					//if(fcs8_crc_check(p, RFCOMM_UIHCRC_CHECK_LEN, fcs) != 0) {
-					/* Packet discarded due to failing frame check sequence */
-					LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: UIH_PF packet discarded due to failing frame check sequence RFCS = 0x%x LFCS = 0x%x\n", 
-								fcs, pcb->uihpf_in_fcs));
-					pbuf_free(p);
-					return ERR_OK;
+		}
+	} else if(rfcommhdr.ctrl == RFCOMM_UIH) {
+		if(fcs != pcb->uih_in_fcs) { /* Check against the precalculated fcs */
+			/*if(fcs8_crc_check(p, RFCOMM_UIHCRC_CHECK_LEN, fcs) != 0)  */
+			/* Packet discarded due to failing frame check sequence */
+			LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: UIH packet discarded due to failing frame check sequence\n"));
+			pbuf_free(p);
+			return ERR_OK;
+		}
+	} else if(rfcommhdr.ctrl == RFCOMM_UIH_PF) {
+		if(fcs != pcb->uihpf_in_fcs) { /* Check against the precalculated fcs */
+			/*if(fcs8_crc_check(p, RFCOMM_UIHCRC_CHECK_LEN, fcs) != 0)  */
+			/* Packet discarded due to failing frame check sequence */
+			LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: UIH_PF packet discarded due to failing frame check sequence RFCS = 0x%x LFCS = 0x%x\n", 
+						fcs, pcb->uihpf_in_fcs));
+			pbuf_free(p);
+			return ERR_OK;
+		}
+	} else {
+		if(fcs8_crc_check(p, hdrlen, fcs) != 0) {
+			/* Packet discarded due to failing frame check sequence */
+			LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Packet discarded due to failing frame check sequence\n"));
+			pbuf_free(p);
+			return ERR_OK;
+		}
+	}
+
+	pbuf_header(p, -hdrlen); /* Adjust information pointer */
+	pbuf_realloc(p, rfcommhdr.len); /* Remove fcs from packet */
+
+	switch(rfcommhdr.ctrl) {
+		case RFCOMM_SABM:
+			LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_SABM\n"));
+			if(pcb == NULL) {
+				/* Check if the server channel exists */
+				lpcb = NULL;
+				if(rfcommhdr.addr >> 3 == 0) { /* Only the multiplexer channel can be connected without first 
+												  configuring it */
+					for(lpcb = rfcomm_listen_pcbs; lpcb != NULL; lpcb = lpcb->next) {
+						if(lpcb->cn == (rfcommhdr.addr >> 3)) {
+							break;
+						}
+					}
 				}
-				} else {
-					if(fcs8_crc_check(p, hdrlen, fcs) != 0) {
-						/* Packet discarded due to failing frame check sequence */
-						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Packet discarded due to failing frame check sequence\n"));
+				if(lpcb != NULL) {
+					/* Found a listening pcb with a matching server channel number, now initiate a new active PCB 
+					   with default configuration */
+					LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Allocate RFCOMM PCB for CN %d******************************\n", lpcb->cn));
+					if((pcb = rfcomm_new(l2cappcb)) == NULL) {
+						/* No memory to allocate PCB. Refuse connection attempt */
+						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: No memory to allocate PCB. Refuse connection attempt CN %d******************************\n", lpcb->cn));
+						rfcomm_dm(l2cappcb, &rfcommhdr);
 						pbuf_free(p);
 						return ERR_OK;
 					}
+					pcb->cn = lpcb->cn;
+					pcb->callback_arg = lpcb->callback_arg;
+					pcb->accept = lpcb->accept;
+
+					RFCOMM_REG(&rfcomm_active_pcbs, pcb);
+				} else {
+					/* Channel does not exist or multiplexer is not connected, refuse connection with DM frame */
+					LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Channel does not exist, refuse connection with DM frame CN %d\n", (rfcommhdr.addr >> 3)));
+					rfcomm_dm(l2cappcb, &rfcommhdr);
+					pbuf_free(p);
+					break;
 				}
-
-				pbuf_header(p, -hdrlen); /* Adjust information pointer */
-				pbuf_realloc(p, rfcommhdr.len); /* Remove fcs from packet */
-
-				switch(rfcommhdr.ctrl) {
-					case RFCOMM_SABM:
-						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_SABM\n"));
-						if(pcb == NULL) {
-							/* Check if the server channel exists */
-							lpcb = NULL;
-							if(rfcommhdr.addr >> 3 == 0) { /* Only the multiplexer channel can be connected without first 
-															  configuring it */
-								for(lpcb = rfcomm_listen_pcbs; lpcb != NULL; lpcb = lpcb->next) {
-									if(lpcb->cn == (rfcommhdr.addr >> 3)) {
-										break;
-									}
-								}
-							}
-							if(lpcb != NULL) {
-								/* Found a listening pcb with a matching server channel number, now initiate a new active PCB 
-								   with default configuration */
-								LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Allocate RFCOMM PCB for CN %d******************************\n", lpcb->cn));
-								if((pcb = rfcomm_new(l2cappcb)) == NULL) {
-									/* No memory to allocate PCB. Refuse connection attempt */
-									LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: No memory to allocate PCB. Refuse connection attempt CN %d******************************\n", lpcb->cn));
-									rfcomm_dm(l2cappcb, &rfcommhdr);
-									pbuf_free(p);
-									return ERR_OK;
-								}
-								pcb->cn = lpcb->cn;
-								pcb->callback_arg = lpcb->callback_arg;
-								pcb->accept = lpcb->accept;
-
-								RFCOMM_REG(&rfcomm_active_pcbs, pcb);
-							} else {
-								/* Channel does not exist or multiplexer is not connected, refuse connection with DM frame */
-								LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Channel does not exist, refuse connection with DM frame CN %d\n", (rfcommhdr.addr >> 3)));
-								rfcomm_dm(l2cappcb, &rfcommhdr);
-								pbuf_free(p);
-								break;
-							}
-						}
-						/* Set role to responder */
-						pcb->rfcommcfg &= ~RFCOMM_CFG_IR;
-
-						/* Send UA frame as response to SABM frame */
-						rfcomm_ua(l2cappcb, &rfcommhdr);
-
-						/* FCS precalculation for UIH frames */
-						pbuf_header(p, hdrlen); /* Reuse the buffer for the current header */
-
-						/* Change header values to refelct an UIH frame sent to the initiator */
-						*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0. We are the responder */
-						*((u8_t *)p->payload) &= 0xFD; /* Set C/R bit to 0. We are the responder */
-						((u8_t *)p->payload)[1] = RFCOMM_UIH;
-						pcb->uih_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-						((u8_t *)p->payload)[1] = RFCOMM_UIH_PF;
-						pcb->uihpf_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-
-						/* Change header values to refelct an UIH frame from to the initiator */
-						//*((u8_t *)p->payload) |= 0x04; /* Set direction bit to 1. We are the responder */
-						*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0. We are the responder */
-						*((u8_t *)p->payload) |= 0x02; /* Set C/R bit to 1. We are the responder */
-						((u8_t *)p->payload)[1] = RFCOMM_UIH;
-						pcb->uih_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-						((u8_t *)p->payload)[1] = RFCOMM_UIH_PF;
-						pcb->uihpf_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-
-						/* UIH frame received on the control channel */
-						*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0 */
-						((u8_t *)p->payload)[1] = RFCOMM_UIH;
-						pcb->uih0_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-
-						/* Change header values to reflect an UIH frame sent on the control channel */
-						*((u8_t *)p->payload) &= 0xF9; /* Set C/R bit and direction bit to 0 */
-						((u8_t *)p->payload)[1] = RFCOMM_UIH;
-						pcb->uih0_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-
-						pbuf_free(p);
-						break;
-					case RFCOMM_UA:
-						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_UA\n"));
-						pcb->to = 0;
-						if(pcb->state ==  W4_RFCOMM_SABM_RSP) {
-							pcb->state = RFCOMM_CFG;
-							/* FCS precalculation for UIH frames */
-							pbuf_header(p, hdrlen); /* Reuse the buffer for the current header */
-							/* Change header values to refelct an UIH frame sent to the responder */
-							*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0. We are the initiator */
-							*((u8_t *)p->payload) |= 0x02; /* Set C/R bit to 1. We are the intitiator */
-							((u8_t *)p->payload)[1] = RFCOMM_UIH;
-							pcb->uih_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-							((u8_t *)p->payload)[1]= RFCOMM_UIH_PF;
-							pcb->uihpf_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-
-							/* Change header values to reflect an UIH frame sent to the responder */
-							*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0. We are the intitiator */
-							*((u8_t *)p->payload) &= 0xFD; /* Set C/R bit to 0. We are the initiator */
-							((u8_t *)p->payload)[1] = RFCOMM_UIH;
-							pcb->uih_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-							((u8_t *)p->payload)[1] = RFCOMM_UIH_PF;
-							pcb->uihpf_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-
-							/* UIH frame sent on the control channel */
-							*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0 */
-							*((u8_t *)p->payload) |= 0x02; /* Set C/R bit to 1. We are the intitiator */
-							((u8_t *)p->payload)[1] = RFCOMM_UIH;
-							pcb->uih0_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-
-							/* Change header values to reflect an UIH frame received on the control channel */
-							*((u8_t *)p->payload) &= 0xF9; /* Set C/R bit and direction bit to 0 */
-							((u8_t *)p->payload)[1] = RFCOMM_UIH;
-							pcb->uih0_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
-
-							if(pcb->cn == 0) {	
-								for(tpcb = rfcomm_active_pcbs; tpcb != NULL; tpcb = tpcb->next) {
-									if(bd_addr_cmp(&(tpcb->l2cappcb->remote_bdaddr), &(pcb->l2cappcb->remote_bdaddr)) &&
-											tpcb->state == W4_RFCOMM_MULTIPLEXER) {
-										rfcomm_pn(tpcb, NULL); /* Send a parameter negotiation command to negotiate the 
-																  connection settings for a channel that waits for the
-																  multiplexer connection to be established */
-										break;
-									}
-								}
-							} else {
-								rfcomm_msc(pcb, 0, NULL); /* Send a modem status command to set V.24 control signals for
-															 the RFCOMM connection */
-							}
-						} else if (pcb->state == W4_RFCOMM_DISC_RSP) {
-							//RFCOMM_RMV(&rfcomm_active_pcbs, pcb);
-							pcb->state = RFCOMM_CLOSED;
-							RFCOMM_EVENT_DISCONNECTED(pcb,ERR_OK,ret);
-						} else {
-							/* A response without an outstanding request is silently discarded */
-						}
-						pbuf_free(p);
-						break;
-					case RFCOMM_DM_PF:
-						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_DM_PF\n"));
-					case RFCOMM_DM:
-						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_DM\n"));
-						pcb->to = 0;
-						//RFCOMM_RMV(&rfcomm_active_pcbs, pcb);
-						if(pcb->state ==  W4_RFCOMM_SABM_RSP) {
-							pcb->state = RFCOMM_CLOSED;
-							RFCOMM_EVENT_CONNECTED(pcb,ERR_CONN,ret);
-						} else {
-							pcb->state = RFCOMM_CLOSED;
-							RFCOMM_EVENT_DISCONNECTED(pcb,ERR_CONN,ret);
-						}
-						pbuf_free(p);
-						break;
-					case RFCOMM_DISC:
-						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_DISC\n"));
-						//RFCOMM_RMV(&rfcomm_active_pcbs, pcb);
-						/* Send UA frame as response to DISC frame */
-						ret = rfcomm_ua(l2cappcb, &rfcommhdr);
-						pcb->state = RFCOMM_CLOSED;
-						RFCOMM_EVENT_DISCONNECTED(pcb,ERR_OK,ret);
-						pbuf_free(p);
-						break;
-					case RFCOMM_UIH_PF: 
-						if((rfcommhdr.addr >> 3) == 0) {
-							/* Process multiplexer command/response */
-							rfcomm_process_msg(pcb, &rfcommhdr, l2cappcb, p);
-							pbuf_free(p);
-						} else if(pcb->cl == 0xF) {
-							/* Process credit based frame */
-							if(pcb->rk != 0) {
-								--pcb->rk; /* Decrease remote credits */
-							}
-							LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Received local credits: %d Existing local credits: %d\n", rfcommhdr.k, pcb->k));
-							if((pcb->k + rfcommhdr.k) < 255) {
-								pcb->k += rfcommhdr.k; /* Increase local credits */
-#if RFCOMM_FLOW_QUEUEING
-								q = pcb->buf;
-								/* Queued packet present? */
-								if (q != NULL) {
-									/* NULL attached buffer immediately */
-									pcb->buf = NULL;
-									LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: sending queued packet.\n"));
-									/* Send the queued packet */
-									rfcomm_uih(pcb, pcb->cn, q); 
-									/* Free the queued packet */
-									pbuf_free(q);
-								}
-#endif /* RFCOMM_FLOW_QUEUEING */	
-							} else {
-								pcb->k = 255;
-							}
-							LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Forward RFCOMM_UIH_PF credit packet to higher layer\n"));
-							RFCOMM_EVENT_RECV(pcb,ERR_OK,p,ret); /* Process information. Application must free pbuf */
-						} else {
-							LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Forward RFCOMM_UIH_PF non credit packet to higher layer\n"));
-							RFCOMM_EVENT_RECV(pcb,ERR_OK,p,ret); /* Process information. Application must free pbuf */
-						}
-						break;
-					case RFCOMM_UIH:
-						if((rfcommhdr.addr >> 3) == 0) {
-							/* Process multiplexer command/response */
-							rfcomm_process_msg(pcb, &rfcommhdr, l2cappcb, p);
-							pbuf_free(p);
-						} else {
-							if(pcb->rk != 0) {
-								--pcb->rk; /* Decrease remote credits */
-							}
-
-							LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Forward RFCOMM_UIH packet to higher layer\n"));
-							RFCOMM_EVENT_RECV(pcb,ERR_OK,p,ret); /* Process information. Application must free pbuf */
-						}
-						break;
-					default:
-						/* Unknown or illegal frame type. Throw it away! */
-						pbuf_free(p);
-						break;
-				}
-				return ERR_OK;
 			}
+			/* Set role to responder */
+			pcb->rfcommcfg &= ~RFCOMM_CFG_IR;
 
-			/* 
-			 * rfcomm_arg():
-			 *
-			 * Used to specify the argument that should be passed callback functions.
-			 */
+			/* Send UA frame as response to SABM frame */
+			rfcomm_ua(l2cappcb, &rfcommhdr);
 
-			void
-				rfcomm_arg(struct rfcomm_pcb *pcb, void *arg)
-				{
-					pcb->callback_arg = arg;
-				}
+			/* FCS precalculation for UIH frames */
+			pbuf_header(p, hdrlen); /* Reuse the buffer for the current header */
 
-			/* 
-			 * rfcomm_recv():
-			 * 
-			 * Used to specify the function that should be called when a RFCOMM connection 
-			 * receives data.
-			 */
+			/* Change header values to refelct an UIH frame sent to the initiator */
+			*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0. We are the responder */
+			*((u8_t *)p->payload) &= 0xFD; /* Set C/R bit to 0. We are the responder */
+			((u8_t *)p->payload)[1] = RFCOMM_UIH;
+			pcb->uih_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
+			((u8_t *)p->payload)[1] = RFCOMM_UIH_PF;
+			pcb->uihpf_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
 
-			void
-				rfcomm_recv(struct rfcomm_pcb *pcb, 
-						err_t (* recv)(void *arg, struct rfcomm_pcb *pcb, struct pbuf *p, err_t err))
-				{
-					pcb->recv = recv;
-				}
+			/* Change header values to refelct an UIH frame from to the initiator */
+			//*((u8_t *)p->payload) |= 0x04; /* Set direction bit to 1. We are the responder */
+			*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0. We are the responder */
+			*((u8_t *)p->payload) |= 0x02; /* Set C/R bit to 1. We are the responder */
+			((u8_t *)p->payload)[1] = RFCOMM_UIH;
+			pcb->uih_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
+			((u8_t *)p->payload)[1] = RFCOMM_UIH_PF;
+			pcb->uihpf_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
 
-			/* 
-			 * rfcomm_disc():
-			 * 
-			 * Used to specify the function that should be called when a RFCOMM channel is 
-			 * disconnected
-			 */
+			/* UIH frame received on the control channel */
+			*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0 */
+			((u8_t *)p->payload)[1] = RFCOMM_UIH;
+			pcb->uih0_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
 
-			void
-				rfcomm_disc(struct rfcomm_pcb *pcb, 
-						err_t (* disc)(void *arg, struct rfcomm_pcb *pcb, err_t err))
-				{
-					pcb->disconnected = disc;
-				}
+			/* Change header values to reflect an UIH frame sent on the control channel */
+			*((u8_t *)p->payload) &= 0xF9; /* Set C/R bit and direction bit to 0 */
+			((u8_t *)p->payload)[1] = RFCOMM_UIH;
+			pcb->uih0_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
 
-			/* 
-			 * rfcomm_listen():
-			 * 
-			 * Set the state of the connection to be LISTEN, which means that it is able to accept 
-			 * incoming connections. The protocol control block is reallocated in order to consume 
-			 * less memory. Setting the connection to LISTEN is an irreversible process. Also 
-			 * specify the function that should be called when the channel has been connected.
-			 */
+			pbuf_free(p);
+			break;
+		case RFCOMM_UA:
+			LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_UA\n"));
+			pcb->to = 0;
+			if(pcb->state ==  W4_RFCOMM_SABM_RSP) {
+				pcb->state = RFCOMM_CFG;
+				/* FCS precalculation for UIH frames */
+				pbuf_header(p, hdrlen); /* Reuse the buffer for the current header */
+				/* Change header values to refelct an UIH frame sent to the responder */
+				*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0. We are the initiator */
+				*((u8_t *)p->payload) |= 0x02; /* Set C/R bit to 1. We are the intitiator */
+				((u8_t *)p->payload)[1] = RFCOMM_UIH;
+				pcb->uih_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
+				((u8_t *)p->payload)[1]= RFCOMM_UIH_PF;
+				pcb->uihpf_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
 
-#if LWBT_LAP
-			err_t
-				rfcomm_listen(struct rfcomm_pcb *npcb, u8_t cn, 
-						err_t (* accept)(void *arg, struct rfcomm_pcb *pcb, err_t err))
-				{
-					struct rfcomm_pcb_listen *lpcb;
+				/* Change header values to reflect an UIH frame sent to the responder */
+				*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0. We are the intitiator */
+				*((u8_t *)p->payload) &= 0xFD; /* Set C/R bit to 0. We are the initiator */
+				((u8_t *)p->payload)[1] = RFCOMM_UIH;
+				pcb->uih_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
+				((u8_t *)p->payload)[1] = RFCOMM_UIH_PF;
+				pcb->uihpf_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
 
-					if((lpcb = lwbt_memp_malloc(MEMP_RFCOMM_PCB_LISTEN)) == NULL) {
-						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_listen: Could not allocate memory for pcb\n"));
-						return ERR_MEM;
+				/* UIH frame sent on the control channel */
+				*((u8_t *)p->payload) &= 0xFB; /* Set direction bit to 0 */
+				*((u8_t *)p->payload) |= 0x02; /* Set C/R bit to 1. We are the intitiator */
+				((u8_t *)p->payload)[1] = RFCOMM_UIH;
+				pcb->uih0_out_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
+
+				/* Change header values to reflect an UIH frame received on the control channel */
+				*((u8_t *)p->payload) &= 0xF9; /* Set C/R bit and direction bit to 0 */
+				((u8_t *)p->payload)[1] = RFCOMM_UIH;
+				pcb->uih0_in_fcs = fcs8_crc_calc(p, RFCOMM_UIHCRC_CHECK_LEN);
+
+				if(pcb->cn == 0) {	
+					for(tpcb = rfcomm_active_pcbs; tpcb != NULL; tpcb = tpcb->next) {
+						if(bd_addr_cmp(&(tpcb->l2cappcb->remote_bdaddr), &(pcb->l2cappcb->remote_bdaddr)) &&
+								tpcb->state == W4_RFCOMM_MULTIPLEXER) {
+							rfcomm_pn(tpcb, NULL); /* Send a parameter negotiation command to negotiate the 
+													  connection settings for a channel that waits for the
+													  multiplexer connection to be established */
+							break;
+						}
 					}
-					lpcb->cn = cn;
-					lpcb->callback_arg = npcb->callback_arg;
-					lpcb->accept = accept;
-					lpcb->state = RFCOMM_LISTEN;
-
-					lwbt_memp_free(MEMP_RFCOMM_PCB, npcb);
-					RFCOMM_REG((struct rfcomm_pcb **)&rfcomm_listen_pcbs, (struct rfcomm_pcb *)lpcb);
-					return ERR_OK;
+				} else {
+					rfcomm_msc(pcb, 0, NULL); /* Send a modem status command to set V.24 control signals for
+												 the RFCOMM connection */
 				}
+			} else if (pcb->state == W4_RFCOMM_DISC_RSP) {
+				//RFCOMM_RMV(&rfcomm_active_pcbs, pcb);
+				pcb->state = RFCOMM_CLOSED;
+				RFCOMM_EVENT_DISCONNECTED(pcb,ERR_OK,ret);
+			} else {
+				/* A response without an outstanding request is silently discarded */
+			}
+			pbuf_free(p);
+			break;
+		case RFCOMM_DM_PF:
+			LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_DM_PF\n"));
+		case RFCOMM_DM:
+			LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_DM\n"));
+			pcb->to = 0;
+			//RFCOMM_RMV(&rfcomm_active_pcbs, pcb);
+			if(pcb->state ==  W4_RFCOMM_SABM_RSP) {
+				pcb->state = RFCOMM_CLOSED;
+				RFCOMM_EVENT_CONNECTED(pcb,ERR_CONN,ret);
+			} else {
+				pcb->state = RFCOMM_CLOSED;
+				RFCOMM_EVENT_DISCONNECTED(pcb,ERR_CONN,ret);
+			}
+			pbuf_free(p);
+			break;
+		case RFCOMM_DISC:
+			LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: RFCOMM_DISC\n"));
+			//RFCOMM_RMV(&rfcomm_active_pcbs, pcb);
+			/* Send UA frame as response to DISC frame */
+			ret = rfcomm_ua(l2cappcb, &rfcommhdr);
+			pcb->state = RFCOMM_CLOSED;
+			RFCOMM_EVENT_DISCONNECTED(pcb,ERR_OK,ret);
+			pbuf_free(p);
+			break;
+		case RFCOMM_UIH_PF: 
+			if((rfcommhdr.addr >> 3) == 0) {
+				/* Process multiplexer command/response */
+				rfcomm_process_msg(pcb, &rfcommhdr, l2cappcb, p);
+				pbuf_free(p);
+			} else if(pcb->cl == 0xF) {
+				/* Process credit based frame */
+				if(pcb->rk != 0) {
+					--pcb->rk; /* Decrease remote credits */
+				}
+				LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Received local credits: %d Existing local credits: %d\n", rfcommhdr.k, pcb->k));
+				if((pcb->k + rfcommhdr.k) < 255) {
+					pcb->k += rfcommhdr.k; /* Increase local credits */
+#if RFCOMM_FLOW_QUEUEING
+					q = pcb->buf;
+					/* Queued packet present? */
+					if (q != NULL) {
+						/* NULL attached buffer immediately */
+						pcb->buf = NULL;
+						LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: sending queued packet.\n"));
+						/* Send the queued packet */
+						rfcomm_uih(pcb, pcb->cn, q); 
+						/* Free the queued packet */
+						pbuf_free(q);
+					}
+#endif /* RFCOMM_FLOW_QUEUEING */	
+				} else {
+					pcb->k = 255;
+				}
+				LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Forward RFCOMM_UIH_PF credit packet to higher layer\n"));
+				RFCOMM_EVENT_RECV(pcb,ERR_OK,p,ret); /* Process information. Application must free pbuf */
+			} else {
+				LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Forward RFCOMM_UIH_PF non credit packet to higher layer\n"));
+				RFCOMM_EVENT_RECV(pcb,ERR_OK,p,ret); /* Process information. Application must free pbuf */
+			}
+			break;
+		case RFCOMM_UIH:
+			if((rfcommhdr.addr >> 3) == 0) {
+				/* Process multiplexer command/response */
+				rfcomm_process_msg(pcb, &rfcommhdr, l2cappcb, p);
+				pbuf_free(p);
+			} else {
+				if(pcb->rk != 0) {
+					--pcb->rk; /* Decrease remote credits */
+				}
+
+				LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Forward RFCOMM_UIH packet to higher layer\n"));
+				RFCOMM_EVENT_RECV(pcb,ERR_OK,p,ret); /* Process information. Application must free pbuf */
+			}
+			break;
+		default:
+			/* Unknown or illegal frame type. Throw it away! */
+			pbuf_free(p);
+			break;
+	}
+	return ERR_OK;
+}
+
+/* 
+ * rfcomm_arg():
+ *
+ * Used to specify the argument that should be passed callback functions.
+ */
+void rfcomm_arg(struct rfcomm_pcb *pcb, void *arg)
+{
+	pcb->callback_arg = arg;
+}
+
+/* 
+ * rfcomm_recv():
+ * 
+ * Used to specify the function that should be called when a RFCOMM connection 
+ * receives data.
+ */
+void rfcomm_recv(struct rfcomm_pcb *pcb, 
+		err_t (* recv)(void *arg, struct rfcomm_pcb *pcb, struct pbuf *p, err_t err))
+{
+	pcb->recv = recv;
+}
+
+/* 
+ * rfcomm_disc():
+ * 
+ * Used to specify the function that should be called when a RFCOMM channel is 
+ * disconnected
+ */
+void rfcomm_disc(struct rfcomm_pcb *pcb,
+		err_t (* disc)(void *arg, struct rfcomm_pcb *pcb, err_t err))
+{
+	pcb->disconnected = disc;
+}
+
+/* 
+ * rfcomm_listen():
+ * 
+ * Set the state of the connection to be LISTEN, which means that it is able to accept 
+ * incoming connections. The protocol control block is reallocated in order to consume 
+ * less memory. Setting the connection to LISTEN is an irreversible process. Also 
+ * specify the function that should be called when the channel has been connected.
+ */
+#if LWBT_LAP
+err_t rfcomm_listen(struct rfcomm_pcb *npcb, u8_t cn, 
+		err_t (* accept)(void *arg, struct rfcomm_pcb *pcb, err_t err))
+{
+	struct rfcomm_pcb_listen *lpcb;
+
+	if((lpcb = lwbt_memp_malloc(MEMP_RFCOMM_PCB_LISTEN)) == NULL) {
+		LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_listen: Could not allocate memory for pcb\n"));
+		return ERR_MEM;
+	}
+	lpcb->cn = cn;
+	lpcb->callback_arg = npcb->callback_arg;
+	lpcb->accept = accept;
+	lpcb->state = RFCOMM_LISTEN;
+
+	lwbt_memp_free(MEMP_RFCOMM_PCB, npcb);
+	RFCOMM_REG((struct rfcomm_pcb **)&rfcomm_listen_pcbs, (struct rfcomm_pcb *)lpcb);
+	return ERR_OK;
+}
 #endif /* LWBT_LAP */
 
 

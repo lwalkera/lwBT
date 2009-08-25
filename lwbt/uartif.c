@@ -67,13 +67,6 @@ void phybusif_init(const char * port)
 {
 	struct termios tio;
 	int i;
-	u8_t dummy;
-	u8_t initpacket[] = {0x01, 0x00, 0xfc, 0x17, 
-		0xc2, 0x00, 0x00, 0x09, 0x00,
-		0x00, 0x00, 0x19, 0x28, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00};
 
 	/* Open the device to be non-blocking (read will return immediatly) */
 	fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
@@ -83,57 +76,6 @@ void phybusif_init(const char * port)
 	}
 
 	/* Set new port settings */
-#if 0
-	tcflush(fd, TCIOFLUSH);
-
-	if (tcgetattr(fd, &tio) < 0) {
-		perror("Can't get port settings");
-		exit(-1);
-	}
-
-	cfmakeraw(&tio);
-
-	tio.c_cflag |= CS8 | CLOCAL | CREAD;
-	tio.c_cflag |= CRTSCTS;
-
-	if (tcsetattr(fd, TCSANOW, &tio) < 0) {
-		perror("Can't set port settings");
-		exit(-1);
-	}
-
-	/* Set initial baudrate */
-	if (set_speed(fd, &tio, BAUDRATE) < 0) {
-		perror("Can't set initial baud rate");
-		exit(-1);
-	}
-
-	tcflush(fd, TCIOFLUSH);
-
-	//if (send_break) {
-	//	tcsendbreak(fd, 0);
-	//	usleep(500000);
-	//}
-
-	tcflush(fd, TCIOFLUSH);
-
-	/* Set actual baudrate */
-	if (set_speed(fd, &tio, BAUDRATE) < 0) {
-		perror("Can't set baud rate");
-		exit(-1);
-	}
-
-	/* Set TTY to N_HCI line discipline */
-//	i = 15; //N_HCI;
-//	if (ioctl(fd, TIOCSETD, &i) < 0) {
-//		perror("Can't set line discipline");
-//		exit(-1);
-//	}
-//
-//	if (ioctl(fd, _IOW('U', 200, int)/*HCIUARTSETPROTO*/, 0) < 0) {
-//		perror("Can't set device proto");
-//		exit(-1);
-//	}
-#else
 	tcgetattr(fd,&tio); /* Save current port settings */
 	tio.c_cflag = CS8 | CREAD | CLOCAL | CRTSCTS; 
 	tio.c_iflag = 0;
@@ -148,10 +90,6 @@ void phybusif_init(const char * port)
 	if(tcsetattr(fd,TCSANOW,&tio) < 0)
 		exit(-1);
 	tcflush(fd, TCIOFLUSH);
-
-//	write(fd, initpacket, 0x17+4);
-
-#endif
 }
 
 err_t phybusif_reset(struct phybusif_cb *cb) 
@@ -177,11 +115,12 @@ err_t phybusif_input(struct phybusif_cb *cb)
 	unsigned char n;
 
 	while((n = read(fd,&c,1))) {
-		printf("got char: 0x%02x", c);
+		LWIP_DEBUGF(PHYBUSIF_DEBUG, ("got char: 0x%02x", c));
+
 		if(c < 127 && c > 32)
-			printf("(%c)\n", c);
+			LWIP_DEBUGF(PHYBUSIF_DEBUG, ("(%c)\n", c));
 		else
-			printf("\n");
+			LWIP_DEBUGF(PHYBUSIF_DEBUG, ("\n"));
 
 		switch(cb->state) {
 			case W4_PACKET_TYPE:
@@ -295,7 +234,7 @@ void phybusif_output(struct pbuf *p, u16_t len)
 		ptr = q->payload;
 		for(i = 0; i < q->len && len; i++) {
 			c = *ptr++;
-			printf("sending %02x\n", c);
+				LWIP_DEBUGF(PHYBUSIF_DEBUG, ("sending %02x\n", c));
 
 			bailout = 0;
 			while(write(fd, &c, 1) < 0) //keep trying until it's sent

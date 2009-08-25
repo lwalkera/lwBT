@@ -13,8 +13,12 @@ endif
 
 lwbt.out: $(sources:.c=.o)
 
-.PHONY: clean
+.PHONY: clean mrproper
 clean:
-	rm -f *.o *.d *.out
-	rm -f lwip/*.o lwip/*.d lwip/*.out
-	rm -f lwbt/*.o lwbt/*.d lwbt/*.out
+	rm -f *.o *.out
+	rm -f lwip/*.o lwip/*.out
+	rm -f lwbt/*.o lwbt/*.out
+mrproper: clean
+	rm -f *.d
+	rm -f lwip/*.d
+	rm -f lwbt/*.d

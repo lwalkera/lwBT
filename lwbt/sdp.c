@@ -37,9 +37,9 @@
  */
 /*-----------------------------------------------------------------------------------*/
 
-#include "netif/lwbt/sdp.h"
-#include "netif/lwbt/lwbt_memp.h"
-#include "lwbtopts.h"
+#include "lwbt/sdp.h"
+#include "lwbt/lwbt_memp.h"
+#include "arch/lwbtopts.h"
 #include "lwip/debug.h"
 
 #include "lwip/inet.h"
