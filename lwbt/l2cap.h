@@ -351,47 +351,54 @@ extern struct l2cap_pcb *l2cap_tmp_pcb;      /* Only used for temporary storage.
 /* Define two macros, L2CAP_REG and L2CAP_RMV that registers a L2CAP PCB
    with a PCB list or removes a PCB from a list, respectively. */
 #ifdef LWBT_DEBUG
-#define L2CAP_REG(pcbs, npcb) do { \
-                            for(l2cap_tmp_pcb = *pcbs; \
-				  l2cap_tmp_pcb != NULL; \
-				l2cap_tmp_pcb = l2cap_tmp_pcb->next) { \
-                                LWIP_ASSERT("L2CAP_REG: already registered\n", l2cap_tmp_pcb != npcb); \
-                            } \
-                            npcb->next = *pcbs; \
-                            LWIP_ASSERT("L2CAP_REG: npcb->next != npcb", npcb->next != npcb); \
-                            *pcbs = npcb; \
-                            } while(0)
-#define L2CAP_RMV(pcbs, npcb) do { \
-                            LWIP_ASSERT("L2CAP_RMV: pcbs != NULL", *pcbs != NULL); \
-                            LWIP_DEBUGF(L2CAP_DEBUG, ("L2CAP_RMV: removing %p from %p\n", npcb, *pcbs)); \
-                            if(*pcbs == npcb) { \
-                               *pcbs = (*pcbs)->next; \
-                            } else for(l2cap_tmp_pcb = *pcbs; l2cap_tmp_pcb != NULL; l2cap_tmp_pcb = l2cap_tmp_pcb->next) { \
-                               if(l2cap_tmp_pcb->next != NULL && l2cap_tmp_pcb->next == npcb) { \
-                                  l2cap_tmp_pcb->next = npcb->next; \
-                                  break; \
-                               } \
-                            } \
-                            npcb->next = NULL; \
-                            LWIP_DEBUGF(L2CAP_DEBUG, ("L2CAP_RMV: removed %p from %p\n", npcb, *pcbs)); \
-                            } while(0)
+#define L2CAP_REG(pcbs, npcb) \
+	do { \
+		for(l2cap_tmp_pcb = *(pcbs); \
+			l2cap_tmp_pcb != NULL; \
+			l2cap_tmp_pcb = l2cap_tmp_pcb->next) { \
+				LWIP_ASSERT("L2CAP_REG: already registered\n", l2cap_tmp_pcb != (npcb)); \
+			} \
+		(npcb)->next = *(pcbs); \
+		LWIP_ASSERT("L2CAP_REG: npcb->next != npcb", (npcb)->next != (npcb)); \
+		*(pcbs) = (npcb); \
+	} while(0)
+
+#define L2CAP_RMV(pcbs, npcb) \
+	do { \
+		LWIP_ASSERT("L2CAP_RMV: pcbs != NULL", *(pcbs) != NULL); \
+		LWIP_DEBUGF(L2CAP_DEBUG, ("L2CAP_RMV: removing %p from %p\n", (npcb), *(pcbs))); \
+		if(*(pcbs) == (npcb)) { \
+			*(pcbs) = (*(pcbs))->next; \
+		} else for(l2cap_tmp_pcb = *(pcbs); l2cap_tmp_pcb != NULL; l2cap_tmp_pcb = l2cap_tmp_pcb->next) { \
+			if(l2cap_tmp_pcb->next != NULL && l2cap_tmp_pcb->next == (npcb)) { \
+				l2cap_tmp_pcb->next = (npcb)->next; \
+				break; \
+			} \
+		} \
+		(npcb)->next = NULL; \
+		LWIP_DEBUGF(L2CAP_DEBUG, ("L2CAP_RMV: removed %p from %p\n", (npcb), *(pcbs))); \
+	} while(0)
 
 #else /* LWBT_DEBUG */
-#define L2CAP_REG(pcbs, npcb) do { \
-                            npcb->next = *pcbs; \
-                            *pcbs = npcb; \
-                            } while(0)
-#define L2CAP_RMV(pcbs, npcb) do { \
-                            if(*pcbs == npcb) { \
-                               *pcbs = (*pcbs)->next; \
-                            } else for(l2cap_tmp_pcb = *pcbs; l2cap_tmp_pcb != NULL; l2cap_tmp_pcb = l2cap_tmp_pcb->next) { \
-                               if(l2cap_tmp_pcb->next != NULL && l2cap_tmp_pcb->next == npcb) { \
-                                  l2cap_tmp_pcb->next = npcb->next; \
-                                  break; \
-                               } \
-                            } \
-                            npcb->next = NULL; \
-                            } while(0)
+#define L2CAP_REG(pcbs, npcb) \
+	do { \
+		(npcb)->next = *(pcbs); \
+		*(pcbs) = (npcb); \
+	} while(0)
+
+#define L2CAP_RMV(pcbs, npcb) \
+	do { \
+		if(*(pcbs) == (npcb)) { \
+			*(pcbs) = (*pcbs)->next; \
+		} else for(l2cap_tmp_pcb = *(pcbs); l2cap_tmp_pcb != NULL; l2cap_tmp_pcb = l2cap_tmp_pcb->next) { \
+			if(l2cap_tmp_pcb->next != NULL && l2cap_tmp_pcb->next == (npcb)) { \
+				l2cap_tmp_pcb->next = (npcb)->next; \
+				break; \
+			} \
+		} \
+		(npcb)->next = NULL; \
+	} while(0)
+
 #endif /* LWBT_DEBUG */
 
 /* The L2CAP SIG list macros */

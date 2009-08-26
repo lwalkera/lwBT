@@ -300,20 +300,23 @@ extern struct rfcomm_pcb *rfcomm_tmp_pcb;      /* Only used for temporary storag
 /* Define two macros, RFCOMM_REG and RFCOMM_RMV that registers a RFCOMM PCB
    with a PCB list or removes a PCB from a list, respectively. */
 
-#define RFCOMM_REG(pcbs, npcb) do { \
-                            npcb->next = *pcbs; \
-                            *pcbs = npcb; \
-                            } while(0)
-#define RFCOMM_RMV(pcbs, npcb) do { \
-                            if(*pcbs == npcb) { \
-                               *pcbs = (*pcbs)->next; \
-                            } else for(rfcomm_tmp_pcb = *pcbs; rfcomm_tmp_pcb != NULL; rfcomm_tmp_pcb = rfcomm_tmp_pcb->next) { \
-                               if(rfcomm_tmp_pcb->next != NULL && rfcomm_tmp_pcb->next == npcb) { \
-                                  rfcomm_tmp_pcb->next = npcb->next; \
-                                  break; \
-                               } \
-                            } \
-                            npcb->next = NULL; \
-                            } while(0)
+#define RFCOMM_REG(pcbs, npcb) \
+	do { \
+		(npcb)->next = *(pcbs); \
+		*(pcbs) = (npcb); \
+	} while(0)
+
+#define RFCOMM_RMV(pcbs, npcb) \
+	do { \
+		if(*(pcbs) == (npcb)) { \
+			*(pcbs) = (*(pcbs))->next; \
+		} else for(rfcomm_tmp_pcb = *(pcbs); rfcomm_tmp_pcb != NULL; rfcomm_tmp_pcb = rfcomm_tmp_pcb->next) { \
+			if(rfcomm_tmp_pcb->next != NULL && rfcomm_tmp_pcb->next == (npcb)) { \
+				rfcomm_tmp_pcb->next = (npcb)->next; \
+				break; \
+			} \
+		} \
+		(npcb)->next = NULL; \
+	} while(0)
 
 #endif /* __RFCOMM_H__ */

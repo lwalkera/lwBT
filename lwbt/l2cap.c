@@ -30,14 +30,14 @@
  *
  */
 
-/*-----------------------------------------------------------------------------------*/
+
 /* l2cap.c
  *
  * Implementation of the logical link control and adaption protocol (L2CAP). Supports 
  * higher level protocol multiplexing, packet segmentation and reassembly, and the 
  * conveying of quality of service information.
  */
-/*-----------------------------------------------------------------------------------*/
+
 
 #include "lwbt/l2cap.h"
 #include "lwbt/lwbt_memp.h"
@@ -65,13 +65,13 @@ struct l2cap_seg *l2cap_tmp_inseg;
 /* Forward declarations */
 static u16_t l2cap_cid_alloc(void);
 
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_init():
  * 
  * Initializes the L2CAP layer.
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 l2cap_init(void)
 {
@@ -86,7 +86,7 @@ l2cap_init(void)
   /* Initialize the signal identifier (0x00 shall never be used) */
   sigid_nxt = 0x00;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /*
  * l2cap_tmr():
  *
@@ -94,7 +94,7 @@ l2cap_init(void)
  * removes a channel if it has been waiting for a request enough
  * time. It also includes a configuration timer.
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 l2cap_tmr(void)
 {
@@ -176,13 +176,13 @@ l2cap_tmr(void)
     }
   } /* for */
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_write():
  * 
  * Output L2CAP data to the lower layers. Segments the packet in to PDUs.
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2cap_write(struct bd_addr *bdaddr, struct pbuf *p, u16_t len) 
 {
@@ -233,13 +233,13 @@ l2cap_write(struct bd_addr *bdaddr, struct pbuf *p, u16_t len)
   LWIP_DEBUGF(L2CAP_DEBUG, ("l2cap_write: DONE\n"));
   return ret;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_process_sig():
  * 
  * Parses the received message handles it.
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 l2cap_process_sig(struct pbuf *q, struct l2cap_hdr *l2caphdr, struct bd_addr *bdaddr)
 {
@@ -768,14 +768,14 @@ l2cap_process_sig(struct pbuf *q, struct l2cap_hdr *l2caphdr, struct bd_addr *bd
     pbuf_header(p, -(sighdr->len));
   } /* while */
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_input():
  * 
  * Called by the lower layer. Reassembles the packet, parses the header and forward
  * it to the upper layer or the signal handler.
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 l2cap_input(struct pbuf *p, struct bd_addr *bdaddr)
 {
@@ -890,7 +890,7 @@ l2cap_input(struct pbuf *p, struct bd_addr *bdaddr)
 
     /* Forward packet to higher layer */
     LWIP_DEBUGF(L2CAP_DEBUG, ("l2cap_input: Forward packet to higher layer\n"));
-    LWIP_DEBUGF(L2CAP_DEBUG, ("l2cap_input: Remote BD address: 0x%x:0x%x:0x%x:0x%x:0x%x:0x%x\n",
+    LWIP_DEBUGF(L2CAP_DEBUG, ("l2cap_input: Remote BD address: %02x:%02x:%02x:%02x:%02x:%02x\n",
 		       inseg->pcb->remote_bdaddr.addr[5],
 		       inseg->pcb->remote_bdaddr.addr[4],
 		       inseg->pcb->remote_bdaddr.addr[3],
@@ -907,14 +907,14 @@ l2cap_input(struct pbuf *p, struct bd_addr *bdaddr)
   lwbt_memp_free(MEMP_L2CAP_SEG, inseg);
 
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_cid_alloc():
  * 
  * Allocates a channel identifier (CID). They are local names representing a logical 
  * channel endpoint on the device.
  */
-/*-----------------------------------------------------------------------------------*/
+
 static u16_t
 l2cap_cid_alloc(void)
 {
@@ -933,14 +933,14 @@ l2cap_cid_alloc(void)
   }
   return 0;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_new():
  * 
  * Creates a new L2CAP protocol control block but doesn't place it on
  * any of the L2CAP PCB lists.
  */
-/*-----------------------------------------------------------------------------------*/
+
 struct l2cap_pcb *
 l2cap_new(void)
 {
@@ -972,13 +972,13 @@ l2cap_new(void)
   LWIP_DEBUGF(L2CAP_DEBUG, ("l2cap_new: Could not allocate memory for pcb\n"));
   return NULL;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_close():
  * 
  * Closes the L2CAP protocol control block.
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2cap_close(struct l2cap_pcb *pcb)
 {
@@ -1001,13 +1001,13 @@ l2cap_close(struct l2cap_pcb *pcb)
   pcb = NULL;
   return ERR_OK;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_reset_all():
  *
  * Closes all active and listening L2CAP protocol control blocks.
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 l2cap_reset_all(void)
 { 
@@ -1036,17 +1036,17 @@ l2cap_reset_all(void)
 
   l2cap_init();
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* L2CAP to L2CAP signalling events
  */
-/*-----------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------*/
+
+
 /* 
  * l2cap_signal():
  * 
  * Assembles the signalling packet and passes it to the lower layer.
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2cap_signal(struct l2cap_pcb *pcb, u8_t code, u16_t ursp_id, struct bd_addr *remote_bdaddr, 
 	     struct pbuf *data)
@@ -1119,13 +1119,13 @@ l2cap_signal(struct l2cap_pcb *pcb, u8_t code, u16_t ursp_id, struct bd_addr *re
   
   return ret;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_rexmit_signal():
  * 
  * Called by the l2cap timer. Retransmitts a signal.
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2cap_rexmit_signal(struct l2cap_pcb *pcb, struct l2cap_sig *sig)
 {
@@ -1136,11 +1136,11 @@ l2cap_rexmit_signal(struct l2cap_pcb *pcb, struct l2cap_sig *sig)
 
   return ret;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* Upper-Layer to L2CAP signaling events
  */
-/*-----------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------*/
+
+
 /* 
  * l2ca_connect_req():
  * 
@@ -1149,7 +1149,7 @@ l2cap_rexmit_signal(struct l2cap_pcb *pcb, struct l2cap_sig *sig)
  * are the target protocol(PSM) and remote devices 48-bit address (BD_ADDR). Also 
  * specify the function to be called when a confirm has been received.
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2ca_connect_req(struct l2cap_pcb *pcb, struct bd_addr *bdaddr, u16_t psm, 
                  u8_t role_switch, err_t (* l2ca_connect_cfm)(void *arg, struct l2cap_pcb *lpcb,
@@ -1189,7 +1189,7 @@ l2ca_connect_req(struct l2cap_pcb *pcb, struct bd_addr *bdaddr, u16_t psm,
   
   return ret;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2ca_config_req():
  * 
@@ -1198,7 +1198,7 @@ l2ca_connect_req(struct l2cap_pcb *pcb, struct bd_addr *bdaddr, u16_t psm,
  * receivable MTU (InMTU), new outgoing flow specification, and flush and link 
  * timeouts. Also specify the function to be called when a confirm has been received.
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2ca_config_req(struct l2cap_pcb *pcb)
 {
@@ -1269,14 +1269,14 @@ l2ca_config_req(struct l2cap_pcb *pcb)
   }
   return ret;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2ca_disconnect_req():
  * 
  * Requests the disconnection of the channel. Also specify the function to be called
  * when a confirm is received
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2ca_disconnect_req(struct l2cap_pcb *pcb, err_t (* l2ca_disconnect_cfm)(void *arg, struct l2cap_pcb *pcb))
 {
@@ -1304,13 +1304,13 @@ l2ca_disconnect_req(struct l2cap_pcb *pcb, err_t (* l2ca_disconnect_cfm)(void *a
 
   return ret;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2ca_datawrite():
  * 
  * Transfers data across the channel.
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2ca_datawrite(struct l2cap_pcb *pcb, struct pbuf *p)
 {
@@ -1354,14 +1354,14 @@ l2ca_datawrite(struct l2cap_pcb *pcb, struct pbuf *p)
 
   return ret;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2ca_ping():
  * 
  * Sends an empty L2CAP echo request message. Also specify the function that should
  * be called when a L2CAP echo reply has been received.
  */
-/*-----------------------------------------------------------------------------------*/
+
 err_t
 l2ca_ping(struct bd_addr *bdaddr, struct l2cap_pcb *tpcb,
 	  err_t (* l2ca_pong)(void *arg, struct l2cap_pcb *pcb, u8_t result))
@@ -1381,17 +1381,17 @@ l2ca_ping(struct bd_addr *bdaddr, struct l2cap_pcb *tpcb,
   
   return ret;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* Lower-Layer to L2CAP signaling events
  */
-/*-----------------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------------*/
+
+
 /* 
  * lp_connect_cfm():
  * 
  * Confirms the request to establish a lower layer (Baseband) connection.
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 lp_connect_cfm(struct bd_addr *bdaddr, u8_t encrypt_mode, err_t err)
 {
@@ -1430,26 +1430,26 @@ lp_connect_cfm(struct bd_addr *bdaddr, u8_t encrypt_mode, err_t err)
     }
   }
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * lp_connect_ind():
  * 
  * Indicates the lower protocol has successfully established a connection.
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 lp_connect_ind(struct bd_addr *bdaddr)
 {
   LWIP_DEBUGF(L2CAP_DEBUG, ("lp_connect_ind\n")); 
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * lp_disconnect_ind():
  * 
  * Indicates the lower protocol (Baseband) has been shut down by LMP commands or a 
  * timeout event..
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 lp_disconnect_ind(struct bd_addr *bdaddr)
 {
@@ -1468,13 +1468,13 @@ lp_disconnect_ind(struct bd_addr *bdaddr)
     pcb = tpcb;
   }
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_next_sigid():
  * 
  * Issues a signal identifier that helps matching a request with the reply.
  */
-/*-----------------------------------------------------------------------------------*/
+
 u8_t
 l2cap_next_sigid(void)
 {
@@ -1484,30 +1484,28 @@ l2cap_next_sigid(void)
   }
   return sigid_nxt;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_arg():
  * 
  * Used to specify the argument that should be passed callback functions.
  */
-/*-----------------------------------------------------------------------------------*/
+
 void
 l2cap_arg(struct l2cap_pcb *pcb, void *arg)
 {
   pcb->callback_arg = arg;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_connect_ind():
  * 
- * Set the state of the connection to be LISTEN, which means that it is able to accept 
- * incoming connections. The protocol control block is reallocated in order to consume 
- * less memory. Setting the connection to LISTEN is an irreversible process. Also 
- * specify the function that should be called when the channel has received a 
- * connection request.
+ * Set the state of the connection to be LISTEN, which means that it is able to
+ * accept incoming connections. The protocol control block is reallocated in
+ * order to consume less memory. Setting the connection to LISTEN is an
+ * irreversible process. Also specify the function that should be called when
+ * the channel has received a connection request.
  */
-/*-----------------------------------------------------------------------------------*/
-#if LWBT_LAP
 err_t
 l2cap_connect_ind(struct l2cap_pcb *npcb, u8_t psm,
 		  err_t (* l2ca_connect_ind)(void *arg, struct l2cap_pcb *pcb, err_t err))
@@ -1527,8 +1525,7 @@ l2cap_connect_ind(struct l2cap_pcb *npcb, u8_t psm,
   L2CAP_REG((struct l2cap_pcb **)&l2cap_listen_pcbs, (struct l2cap_pcb *)lpcb);
   return ERR_OK;
 }
-#endif /* LWBT_LAP */
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_disconnect_ind():
  * 
@@ -1536,38 +1533,35 @@ l2cap_connect_ind(struct l2cap_pcb *npcb, u8_t psm,
  * received from a remote device or the remote device has been disconnected because it 
  * has failed to respond to a signalling request.
  */
-/*-----------------------------------------------------------------------------------*/
 void
 l2cap_disconnect_ind(struct l2cap_pcb *pcb,
 		     err_t (* l2ca_disconnect_ind)(void *arg, struct l2cap_pcb *newpcb, err_t err))
 {
   pcb->l2ca_disconnect_ind = l2ca_disconnect_ind;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /*
  * l2cap_timeout_ind():
  * 
  * Used to specify the function to be called when RTX or ERTX timer has expired.
  */
-/*-----------------------------------------------------------------------------------*/
 void
 l2cap_timeout_ind(struct l2cap_pcb *pcb,
 		  err_t (* l2ca_timeout_ind)(void *arg, struct l2cap_pcb *newpcb, err_t err))
 {
   pcb->l2ca_timeout_ind = l2ca_timeout_ind;
 }
-/*-----------------------------------------------------------------------------------*/
+
 /* 
  * l2cap_recv():
  * 
  * Used to specify the function that should be called when a L2CAP connection receives 
  * data.
  */
-/*-----------------------------------------------------------------------------------*/
 void
 l2cap_recv(struct l2cap_pcb *pcb,
 	   err_t (* l2ca_recv)(void *arg, struct l2cap_pcb *pcb, struct pbuf *p, err_t err))
 {
   pcb->l2ca_recv = l2ca_recv;
 }
-/*-----------------------------------------------------------------------------------*/
+

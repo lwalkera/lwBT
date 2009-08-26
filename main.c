@@ -47,6 +47,9 @@
 #include <unistd.h>
 
 
+extern void bt_spp_start();
+extern void bt_spp_tmr();
+
 int main(int argc, char **argv)
 {
 	struct phybusif_cb *cb;
@@ -79,7 +82,7 @@ int main(int argc, char **argv)
 	rfcomm_init();
 	printf("Bluetooth initialized.\n");
 
-
+	bt_spp_start();
 	printf("Applications started.\n");
 
 	cb = malloc(sizeof(struct phybusif_cb));
@@ -105,9 +108,8 @@ int main(int argc, char **argv)
 		if((now.tv_sec - bttv.tv_sec) * 1000000 + (now.tv_usec - bttv.tv_usec) >= 1000000) {
 			gettimeofday(&bttv, &tz); /* Restart Bluetooth timer */
 			l2cap_tmr();
-			//rfcomm_tmr();
-			//ppp_tmr();
-			//nat_tmr();
+			rfcomm_tmr();
+			bt_spp_tmr();
 			if(++btiptmr == 5/*sec*/) {
 
 	

@@ -385,6 +385,7 @@ void hci_event_input(struct pbuf *p)
 	pbuf_header(p, HCI_EVENT_HDR_LEN);
 	evhdr = p->payload;
 	pbuf_header(p, -HCI_EVENT_HDR_LEN);
+	LWIP_DEBUGF(HCI_EV_DEBUG, ("\n"));
 
 	switch(evhdr->code) {
 		case HCI_INQUIRY_COMPLETE:
@@ -928,20 +929,21 @@ err_t hci_set_event_filter(u8_t filter_type, u8_t filter_cond_type, u8_t* cond)
 {
 	u8_t cond_len = 0x00;
 	struct pbuf *p;
+	LWIP_DEBUGF(HCI_DEBUG, ("hci_set_event_filter: filter_type=%d cond_type=%d\n", filter_type, filter_cond_type));
 	switch(filter_type) {
-		case 0x00:
+		case HCI_SET_EV_FILTER_CLEAR:
 			LWIP_DEBUGF(HCI_DEBUG, ("hci_set_event_filter: Clearing all filters\n"));
 			cond_len = 0x00;
 			break;
-		case 0x01:
+		case HCI_SET_EV_FILTER_INQUIRY:
 			switch(filter_cond_type) {
-				case 0x00:
+				case HCI_SET_EV_FILTER_ALLDEV:
 					cond_len = 0x00;
 					break;
-				case 0x01:
+				case HCI_SET_EV_FILTER_COD:
 					cond_len = 0x06;
 					break;
-				case 0x02:
+				case HCI_SET_EV_FILTER_BDADDR:
 					cond_len = 0x06;
 					break;
 				default:
@@ -949,15 +951,15 @@ err_t hci_set_event_filter(u8_t filter_type, u8_t filter_cond_type, u8_t* cond)
 					break;
 			}
 			break;
-		case 0x02:
+		case HCI_SET_EV_FILTER_CONNECTION:
 			switch(filter_cond_type) {
-				case 0x00:
+				case HCI_SET_EV_FILTER_ALLDEV:
 					cond_len = 0x01;
 					break;
-				case 0x01:
+				case HCI_SET_EV_FILTER_COD:
 					cond_len = 0x07;
 					break;
-				case 0x02:
+				case HCI_SET_EV_FILTER_BDADDR:
 					cond_len = 0x07;
 					break;
 				default:

@@ -79,24 +79,31 @@ err_t sdp_recv(void *arg, struct l2cap_pcb *pcb, struct pbuf *p, err_t err);
    types, the value is given as a byte array.
 */
 
-#define SDP_DE_TYPE_NIL 0x00 /* Nil, the null type */
-#define SDP_DE_TYPE_UINT 0x08 /* Unsigned Integer */
-#define SDP_DE_TYPE_STCI 0x10 /* Signed, twos-complement integer */
-#define SDP_DE_TYPE_UUID 0x18 /* UUID, a universally unique identifier */
-#define SDP_DE_TYPE_STR 0x20 /* Text string */
-#define SDP_DE_TYPE_BOOL 0x28 /* Boolean */
-#define SDP_DE_TYPE_DES 0x30 /* Data Element Sequence */
-#define SDP_DE_TYPE_DEA 0x38 /* Data Element Alternative */
-#define SDP_DE_TYPE_URL 0x40 /* URL, a uniform resource locator */
+#define SDP_DE_TYPE_NIL		(0<<3) /* Nil, the null type */
+#define SDP_DE_TYPE_UINT	(1<<3) /* Unsigned Integer */
+#define SDP_DE_TYPE_STCI	(2<<3) /* Signed, twos-complement integer */
+#define SDP_DE_TYPE_UUID	(3<<3) /* UUID, a universally unique identifier */
+#define SDP_DE_TYPE_STR		(4<<3) /* Text string */
+#define SDP_DE_TYPE_BOOL	(5<<3) /* Boolean */
+#define SDP_DE_TYPE_DES		(6<<3) /* Data Element Sequence */
+#define SDP_DE_TYPE_DEA		(7<<3) /* Data Element Alternative */
+#define SDP_DE_TYPE_URL		(8<<3) /* URL, a uniform resource locator */
 
-#define SDP_DE_SIZE_8 0x0 /* 8 bit integer value */
-#define SDP_DE_SIZE_16 0x1 /* 16 bit integer value */
-#define SDP_DE_SIZE_32 0x2 /* 32 bit integer value */
-#define SDP_DE_SIZE_64 0x3 /* 64 bit integer value */
-#define SDP_DE_SIZE_128 0x4 /* 128 bit integer value */
-#define SDP_DE_SIZE_N1 0x5 /* Data size is in next 1 byte */
-#define SDP_DE_SIZE_N2 0x6 /* Data size is in next 2 bytes */
-#define SDP_DE_SIZE_N4 0x7 /* Data size is in next 4 bytes */
+#define SDP_DE_SIZE_8	0x0 /* 8 bit integer value */
+#define SDP_DE_SIZE_16	0x1 /* 16 bit integer value */
+#define SDP_DE_SIZE_32	0x2 /* 32 bit integer value */
+#define SDP_DE_SIZE_64	0x3 /* 64 bit integer value */
+#define SDP_DE_SIZE_128	0x4 /* 128 bit integer value */
+#define SDP_DE_SIZE_N1	0x5 /* Data size is in next 1 byte */
+#define SDP_DE_SIZE_N2	0x6 /* Data size is in next 2 bytes */
+#define SDP_DE_SIZE_N4	0x7 /* Data size is in next 4 bytes */
+
+#define SDP_DES_SIZE8	SDP_DE_TYPE_DES  | SDP_DE_SIZE_N1
+#define SDP_UINT8		SDP_DE_TYPE_UINT | SDP_DE_SIZE_8
+#define SDP_UINT16		SDP_DE_TYPE_UINT | SDP_DE_SIZE_16
+#define SDP_UINT32		SDP_DE_TYPE_UINT | SDP_DE_SIZE_32
+#define SDP_UUID16		SDP_DE_TYPE_UUID | SDP_DE_SIZE_16
+#define SDP_UUID128		SDP_DE_TYPE_UUID | SDP_DE_SIZE_128
 
 /* PDU identifiers */
 #define SDP_ERR_PDU 0x01

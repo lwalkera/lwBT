@@ -1408,12 +1408,12 @@ void rfcomm_disc(struct rfcomm_pcb *pcb,
 /* 
  * rfcomm_listen():
  * 
- * Set the state of the connection to be LISTEN, which means that it is able to accept 
- * incoming connections. The protocol control block is reallocated in order to consume 
- * less memory. Setting the connection to LISTEN is an irreversible process. Also 
- * specify the function that should be called when the channel has been connected.
+ * Set the state of the connection to be LISTEN, which means that it is
+ * able to accept incoming connections. The protocol control block is
+ * reallocated in order to consume less memory. Setting the connection to
+ * LISTEN is an irreversible process. Also specify the function that should
+ * be called when the channel has been connected.
  */
-#if LWBT_LAP
 err_t rfcomm_listen(struct rfcomm_pcb *npcb, u8_t cn, 
 		err_t (* accept)(void *arg, struct rfcomm_pcb *pcb, err_t err))
 {
@@ -1432,6 +1432,3 @@ err_t rfcomm_listen(struct rfcomm_pcb *npcb, u8_t cn,
 	RFCOMM_REG((struct rfcomm_pcb **)&rfcomm_listen_pcbs, (struct rfcomm_pcb *)lpcb);
 	return ERR_OK;
 }
-#endif /* LWBT_LAP */
-
-

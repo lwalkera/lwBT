@@ -3,6 +3,7 @@ lwip/pbuf.c
 lwip/mem.c
 lwip/memp.c
 lwip/stats.c
+lwip/inet.c
 lwbt/fcs.c
 lwbt/lwbt_memp.c
 lwbt/hci.c
@@ -11,3 +12,4 @@ lwbt/l2cap.c
 lwbt/sdp.c
 lwbt/rfcomm.c
 main.c
+bt_spp.c

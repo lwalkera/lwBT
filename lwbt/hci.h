@@ -276,6 +276,19 @@ u16_t lp_pdu_maxsize(void);
 #define HCI_R_BD_ADDR_PLEN 4
 #define HCI_R_SUPPORTED_LOCAL_FEATURES_PLEN 4
 
+/*Set Event Filter params*/
+#define HCI_SET_EV_FILTER_CLEAR 0
+#define HCI_SET_EV_FILTER_INQUIRY 1
+#define HCI_SET_EV_FILTER_CONNECTION 2
+
+#define HCI_SET_EV_FILTER_ALLDEV 0
+#define HCI_SET_EV_FILTER_COD 1
+#define HCI_SET_EV_FILTER_BDADDR 2
+
+#define HCI_SET_EV_FILTER_AUTOACC_OFF 1
+#define HCI_SET_EV_FILTER_AUTOACC_NOROLESW 2
+#define HCI_SET_EV_FILTER_AUTOACC_ROLESW 3
+
 struct hci_event_hdr {
 	u8_t code; /* Event code */
 	u8_t len;  /* Parameter total length */
