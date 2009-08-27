@@ -60,7 +60,7 @@ err_t sdp_service_search_attrib_req(struct sdp_pcb *pcb, u16_t max_abc, u8_t *ss
 
 /* Server API */
 /* Functions to be used when adding and removing service records to and from the SDDB */
-struct sdp_record *sdp_record_new(u8_t *record_de_list, u8_t rlen);
+struct sdp_record *sdp_record_new(u8_t *record_de_list, u16_t rlen);
 void sdp_record_free(struct sdp_record *record);
 err_t sdp_register_service(struct sdp_record *record);
 void sdp_unregister_service(struct sdp_record *record);
@@ -99,6 +99,7 @@ err_t sdp_recv(void *arg, struct l2cap_pcb *pcb, struct pbuf *p, err_t err);
 #define SDP_DE_SIZE_N4	0x7 /* Data size is in next 4 bytes */
 
 #define SDP_DES_SIZE8	SDP_DE_TYPE_DES  | SDP_DE_SIZE_N1
+#define SDP_DES_SIZE16	SDP_DE_TYPE_DES  | SDP_DE_SIZE_N2
 #define SDP_UINT8		SDP_DE_TYPE_UINT | SDP_DE_SIZE_8
 #define SDP_UINT16		SDP_DE_TYPE_UINT | SDP_DE_SIZE_16
 #define SDP_UINT32		SDP_DE_TYPE_UINT | SDP_DE_SIZE_32
@@ -134,7 +135,7 @@ struct sdp_record {
   
   u32_t hdl; /* Service Record Handle */
   u8_t *record_de_list;
-  u8_t len;
+  u16_t len;
 };
 
 /* The SDP protocol control block */

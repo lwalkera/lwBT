@@ -70,26 +70,42 @@ struct bt_state {
 	u8_t cn;
 } bt_spp_state;
 
-static const u8_t spp_service_record[] = {
-	SDP_DES_SIZE8, 0x8, 
-		SDP_UINT16, 0x0, 0x0, /* Service record handle attribute */
-			SDP_UINT32, 0x0, 0x0, 0xff, 0xff, 
-	SDP_DES_SIZE8, 0x14, 
-		SDP_UINT16, 0x0, 0x1, /* Service class ID list attribute */
-		SDP_UUID128, 0x00, 0x00, 0x00, 0x00,
-			0xde, 0xca,
-			0xfa, 0xde,
-			0xde, 0xca,
-			0xde, 0xaf, 0xde, 0xca, 0xca, 0xff,
-	SDP_DES_SIZE8, 0x11,
-		SDP_UINT16, 0x0, 0x4, /* Protocol descriptor list attribute */
-		SDP_DES_SIZE8, 0xc, 
+static const u8_t spp_service_record[] =
+#if 0
+{
+  0x35, 0x8, 
+  0x9, 0x0, 0x0, 0xa, 0x0, 0x0, 0xff, 0xff, /* Service record handle attribute */
+  0x35, 0x8, 
+  0x9, 0x0, 0x1, 0x35, 0x3, 0x19, 0x11, 0x2, /* Service class ID list attribute */
+  0x35, 0x11,
+  0x9, 0x0, 0x4, 0x35, 0xc, 0x35, 0x3, 0x19, 0x1, 0x0, 0x35, 0x5, 0x19, 0x0, 0x3, 0x8, 0x1 /* Protocol descriptor list attribute */
+  };
+#else
+{
+		SDP_DES_SIZE8, 0x8, 
+			SDP_UINT16, 0x0, 0x0, /* Service record handle attribute */
+				SDP_UINT32, 0x4f, 0x49, 0xa2, 0x18, 
+		SDP_DES_SIZE8, 0x14, 
+			SDP_UINT16, 0x0, 0x1, /* Service class ID list attribute */
+			SDP_UUID128, 0x00, 0x00, 0x00, 0x00,
+				0xde, 0xca,
+				0xfa, 0xde,
+				0xde, 0xca,
+				0xde, 0xaf, 0xde, 0xca, 0xca, 0xff,
+		SDP_DES_SIZE8, 0x11,
+			SDP_UINT16, 0x0, 0x4, /* Protocol descriptor list attribute */
+			SDP_DES_SIZE8, 0xc, 
+				SDP_DES_SIZE8, 0x3,
+					SDP_UUID16, 0x1, 0x0, /*L2CAP*/
+				SDP_DES_SIZE8, 0x5,
+					SDP_UUID16, 0x0, 0x3, /*RFCOMM*/
+					SDP_UINT8, 0x0, /*RFCOMM channel*/
+		SDP_DES_SIZE8, 0x8,
+			SDP_UINT16, 0x0, 0x5, /*Browse group list */
 			SDP_DES_SIZE8, 0x3,
-				SDP_UUID16, 0x1, 0x0, /*L2CAP*/
-			SDP_DES_SIZE8, 0x5,
-				SDP_UUID16, 0x0, 0x3, /*RFCOMM*/
-				SDP_UINT8, 0x0 /*RFCOMM channel*/
+				SDP_UUID16, 0x10, 0x02, /*PublicBrowseGroup*/
 };
+#endif
 
 /* 
  * bt_spp_start():
@@ -934,9 +950,9 @@ err_t read_bdaddr_complete(void *arg, struct bd_addr *bdaddr)
  */
 err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t result)
 {
-	u8_t cod_spp[] = {0x24,0x04,0x08};
+	u8_t cod_spp[] = {0x08,0x04,0x24};
 	u8_t cod_pod[] = {0x0a,0x04,0x1c};
-	u8_t devname[] = "iAirlink ----";
+	u8_t devname[] = "iAirlink----";
 	u8_t n1, n2, n3;
 	u8_t flag = HCI_SET_EV_FILTER_AUTOACC_ROLESW;
 
@@ -955,7 +971,6 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 				case HCI_READ_BD_ADDR:
 					if(result == HCI_SUCCESS) {
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("successful HCI_READ_BD_ADDR.\n"));
-						//hci_set_event_filter(0x01, 0x01, cod_pod); /* Report only devices with a specific type of CoD */
 						/* Make discoverable */
 						hci_set_event_filter(HCI_SET_EV_FILTER_CONNECTION,
 								HCI_SET_EV_FILTER_ALLDEV, &flag);
@@ -993,12 +1008,8 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 				case HCI_SET_EVENT_FILTER:
 					if(result == HCI_SUCCESS) {
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("successful HCI_SET_EVENT_FILTER.\n"));
-						if(bt_spp_state.btctrl == 0) {
 							hci_write_cod(cod_spp);
-							bt_spp_state.btctrl = 1;
-						} else {
-							hci_write_scan_enable(0x03); /* Inquiry and page scan enabled */
-						}
+							hci_write_scan_enable(HCI_SCAN_EN_INQUIRY | HCI_SCAN_EN_PAGE);
 					} else {
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("Unsuccessful HCI_SET_EVENT_FILTER.\n"));
 						return ERR_CONN;
@@ -1019,9 +1030,9 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 						n1 = (u8_t)(bt_spp_state.bdaddr.addr[0] / 100);
 						n2 = (u8_t)(bt_spp_state.bdaddr.addr[0] / 10) - n1 * 10;
 						n3 = bt_spp_state.bdaddr.addr[0] - n1 * 100 - n2 * 10;
-						devname[7] = '0' + n1;
-						devname[8] = '0' + n2;
-						devname[9] = '0' + n3;
+						devname[9] = '0' + n1;
+						devname[10] = '0' + n2;
+						devname[11] = '0' + n3;
 						hci_change_local_name(devname, sizeof(devname));
 					} else {
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("Unsuccessful HCI_WRITE_COD.\n"));

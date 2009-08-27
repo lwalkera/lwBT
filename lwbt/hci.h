@@ -276,7 +276,7 @@ u16_t lp_pdu_maxsize(void);
 #define HCI_R_BD_ADDR_PLEN 4
 #define HCI_R_SUPPORTED_LOCAL_FEATURES_PLEN 4
 
-/*Set Event Filter params*/
+/* Set Event Filter params */
 #define HCI_SET_EV_FILTER_CLEAR 0
 #define HCI_SET_EV_FILTER_INQUIRY 1
 #define HCI_SET_EV_FILTER_CONNECTION 2
@@ -288,6 +288,10 @@ u16_t lp_pdu_maxsize(void);
 #define HCI_SET_EV_FILTER_AUTOACC_OFF 1
 #define HCI_SET_EV_FILTER_AUTOACC_NOROLESW 2
 #define HCI_SET_EV_FILTER_AUTOACC_ROLESW 3
+
+/* Write Scan Enable params */
+#define HCI_SCAN_EN_INQUIRY 1
+#define HCI_SCAN_EN_PAGE 2
 
 struct hci_event_hdr {
 	u8_t code; /* Event code */

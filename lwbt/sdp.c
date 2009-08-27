@@ -100,7 +100,7 @@ u32_t sdp_next_rhdl(void)
  * 
  * Creates a new service record.
  */
-struct sdp_record * sdp_record_new(u8_t *record_de_list, u8_t rlen)
+struct sdp_record * sdp_record_new(u8_t *record_de_list, u16_t rlen)
 {
 	struct sdp_record *record;
 
@@ -184,6 +184,7 @@ u8_t sdp_pattern_search(struct sdp_record *record, u8_t size, struct pbuf *p)
 					i += 4;
 					break;
 				case SDP_DE_SIZE_128:
+					LWIP_DEBUGF(SDP_DEBUG, ("TODO: add support for 128-bit UUID\n"));
 					i+= 16;
 					break;
 				default:
@@ -191,7 +192,7 @@ u8_t sdp_pattern_search(struct sdp_record *record, u8_t size, struct pbuf *p)
 			}
 		}
 	}
-	return 0;
+	return 1; //TODO change back to 0
 }
 
 /*
@@ -229,12 +230,15 @@ struct pbuf * sdp_attribute_search(u16_t max_attribl_bc, struct pbuf *p, struct 
 				i += 5;
 			} else {
 				/* ERROR: Invalid req syntax */
-				//TODO
+				LWIP_DEBUGF(SDP_DEBUG, ("sdp_attribute_search: Invalid req syntax\n"));
 			}
+
+			LWIP_DEBUGF(SDP_DEBUG, ("sdp_attribute_search: looking for %04x-%04x\n", attr_id, attr_id2));
 
 			for(j = 0; j < record->len; ++j) {
 				if(SDP_DE_TYPE(record->record_de_list[j]) == SDP_DE_TYPE_DES) {
 					if(record->record_de_list[j + 2] == (SDP_DE_TYPE_UINT | SDP_DE_SIZE_16)) {
+						LWIP_DEBUGF(SDP_DEBUG, ("sdp_attribute_search: looking at rec %04x\n", *((u16_t *)(record->record_de_list + j + 3))));
 						if(*((u16_t *)(record->record_de_list + j + 3)) >= attr_id && 
 								*((u16_t *)(record->record_de_list + j + 3)) <= attr_id2) {
 							if(attribl_bc +  record->record_de_list[j + 1] + 2 > max_attribl_bc) {
@@ -243,7 +247,13 @@ struct pbuf * sdp_attribute_search(u16_t max_attribl_bc, struct pbuf *p, struct 
 								break;
 							}
 							/* Allocate a pbuf for the service attribute */
-							r = pbuf_alloc(PBUF_RAW, record->record_de_list[j + 1], PBUF_RAM);
+							;
+							if((r = pbuf_alloc(PBUF_RAW, record->record_de_list[j + 1], PBUF_RAM)) == NULL)
+							{
+								LWIP_DEBUGF(SDP_DEBUG, ("couldn't alloc pbuf\n"));
+								return NULL;
+							}
+
 							memcpy((u8_t *)r->payload, record->record_de_list + j + 2, r->len);
 							attribl_bc += r->len;
 
@@ -267,7 +277,7 @@ struct pbuf * sdp_attribute_search(u16_t max_attribl_bc, struct pbuf *p, struct 
 		} /* while */
 	} else {
 		/* ERROR: Invalid req syntax */
-		LWIP_DEBUGF(SDP_DEBUG, ("sdp_attribute_search: Invalid req syntax"));
+		LWIP_DEBUGF(SDP_DEBUG, ("sdp_attribute_search: Req not a data element list <255 bytes"));
 	}
 	/* Return service attribute list */
 	if(s != NULL) {
@@ -428,7 +438,7 @@ err_t sdp_service_attrib_req(struct sdp_pcb *pcb, u32_t srhdl, u16_t max_abc,
 	u8_t *payload;
 	struct pbuf *p;
 
-	LWIP_DEBUG(DEBUG_SDP, ("sdp_service_attrib_req"));
+	LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_attrib_req"));
 
 	/* Allocate packet for PDU hdr + service rec hdl + max attribute byte count +
 	   attribute id data element sequense lenght  + continuation state */
@@ -688,8 +698,8 @@ err_t sdp_service_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struct sdp_h
  * sdp_service_search_attrib_rsp():
  * 
  * Sends a response that contains a list of attributes (both attribute ID and 
- * attribute value) from the service records that match the requested service search 
- * pattern.
+ * attribute value) from the service records that match the requested service
+ * search pattern.
  */
 err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struct sdp_hdr *reqhdr)
 {
@@ -715,6 +725,7 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 
 		pbuf_header(p, -2);
 	} else {
+		LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: invalid syntax error\n"));
 		//TODO: INVALID SYNTAX ERROR
 	}
 
@@ -734,20 +745,23 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 			if(r != NULL) {
 				if(q->next == NULL) {
 					s = pbuf_alloc(PBUF_RAW, 2, PBUF_RAM);
-					pbuf_chain(q, s); /* Chain attribute id list for service to response packet */
+					/* Chain attribute id list for service to response packet */
+					pbuf_chain(q, s);
 					pbuf_free(s);
 				}
-				max_attribl_bc -= r->tot_len; /* Calculate remaining number of bytes of attribute 
-												 data the server is to return in response to the 
-												 request */
-				pbuf_chain(q, r); /* Chain attribute id list for service to response packet */
+				/* Calculate remaining number of bytes of attribute data the
+				 * server is to return in response to the request */
+				max_attribl_bc -= r->tot_len; 
+				/* Chain attribute id list for service to response packet */
+				pbuf_chain(q, r);
 				pbuf_free(r);
 			}
 			pbuf_header(p, size + 2);
 		}
 	}
 
-	/* Add attribute list byte count length and length of all attribute lists in this PDU to packet */
+	/* Add attribute list byte count length and length of all attribute lists
+	 * in this PDU to packet */
 	if(q->next != NULL ) {
 		*((u16_t *)(((u8_t *)q->payload) + SDP_PDUHDR_LEN)) = htons(q->tot_len - SDP_PDUHDR_LEN - 2);
 
@@ -759,6 +773,7 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 
 	/* Add continuation state to packet */
 	if((r = pbuf_alloc(PBUF_RAW, 1, PBUF_RAM)) == NULL) {
+		LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: error allocating new pbuf\n"));
 		//TODO: ERROR
 	} else {
 		((u8_t *)r->payload)[0] = 0x00; //TODO: Is this correct?
@@ -772,7 +787,7 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 	for(r = q; r != NULL; r = r->next) {
 		u8_t i;
 		for(i = 0; i < r->len; ++i) {
-			LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: 0x%x\n", ((u8_t *)r->payload)[i]));
+			LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: 0x%02x\n", ((u8_t *)r->payload)[i]));
 		}
 		LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: STOP\n"));
 	}
