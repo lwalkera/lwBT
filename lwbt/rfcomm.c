@@ -204,11 +204,10 @@ void rfcomm_reset_all(void)
 }
 
 /* 
- * rfcomm_get_multiplexer():
+ * rfcomm_get_active_pcb():
  *
  * Return the active PCB with the matching Bluetooth address and channel number.
  */
-
 struct rfcomm_pcb * rfcomm_get_active_pcb(u8_t cn, struct bd_addr *bdaddr)
 {
 	struct rfcomm_pcb *pcb;
