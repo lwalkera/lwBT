@@ -924,7 +924,7 @@ err_t acl_conn_complete(void *arg, struct bd_addr *bdaddr)
 err_t read_bdaddr_complete(void *arg, struct bd_addr *bdaddr)
 {
 	memcpy(&(bt_spp_state.bdaddr), bdaddr, 6);
-	LWIP_DEBUGF(BT_SPP_DEBUG, ("bdaddr: %02x:%02x:%02x:%02x:%02x:%02x\n",
+	LWIP_DEBUGF(BT_SPP_DEBUG, ("read_bdaddr_complete: %02x:%02x:%02x:%02x:%02x:%02x\n",
 				bdaddr->addr[5], bdaddr->addr[4], bdaddr->addr[3],
 				bdaddr->addr[2], bdaddr->addr[1], bdaddr->addr[0]));
 	return ERR_OK;
@@ -934,14 +934,16 @@ err_t read_bdaddr_complete(void *arg, struct bd_addr *bdaddr)
  * command_complete():
  *
  * Called by HCI when an issued command has completed during the initialization of the
- * host controller.
- * Initializes a search for other devices when host controller initialization is
- * completed.
+ * host controller. Waits for a connection from remote device once connected.
+ *
+ * Event Sequence:
+ * HCI Reset -> Read Buf Size -> Read BDAddr -> Set Ev Filter ->
+ * _/-> Write CoD -> Cng Local Name -> Write Pg Timeout -> Inq -> Complete
+ *  \-> Scan Enable -> Complete
  */
 err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t result)
 {
 	u8_t cod_spp[] = {0x08,0x04,0x24};
-	u8_t cod_pod[] = {0x0a,0x04,0x1c};
 	u8_t devname[] = "iAirlink----";
 	u8_t n1, n2, n3;
 	u8_t flag = HCI_SET_EV_FILTER_AUTOACC_ROLESW;
