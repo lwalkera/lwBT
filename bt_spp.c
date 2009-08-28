@@ -71,27 +71,18 @@ struct bt_state {
 } bt_spp_state;
 
 static const u8_t spp_service_record[] =
-#if 0
-{
-  0x35, 0x8, 
-  0x9, 0x0, 0x0, 0xa, 0x0, 0x0, 0xff, 0xff, /* Service record handle attribute */
-  0x35, 0x8, 
-  0x9, 0x0, 0x1, 0x35, 0x3, 0x19, 0x11, 0x2, /* Service class ID list attribute */
-  0x35, 0x11,
-  0x9, 0x0, 0x4, 0x35, 0xc, 0x35, 0x3, 0x19, 0x1, 0x0, 0x35, 0x5, 0x19, 0x0, 0x3, 0x8, 0x1 /* Protocol descriptor list attribute */
-  };
-#else
 {
 		SDP_DES_SIZE8, 0x8, 
 			SDP_UINT16, 0x0, 0x0, /* Service record handle attribute */
-				SDP_UINT32, 0x4f, 0x49, 0xa2, 0x18, 
-		SDP_DES_SIZE8, 0x14, 
+				SDP_UINT32, 0x00, 0x00, 0x00, 0x00, /*dummy vals, filled in on xmit*/ 
+		SDP_DES_SIZE8, 0x16, 
 			SDP_UINT16, 0x0, 0x1, /* Service class ID list attribute */
-			SDP_UUID128, 0x00, 0x00, 0x00, 0x00,
-				0xde, 0xca,
-				0xfa, 0xde,
-				0xde, 0xca,
-				0xde, 0xaf, 0xde, 0xca, 0xca, 0xff,
+			SDP_DES_SIZE8, 17,
+				SDP_UUID128, 0x00, 0x00, 0x00, 0x00,
+					0xde, 0xca,
+					0xfa, 0xde,
+					0xde, 0xca,
+					0xde, 0xaf, 0xde, 0xca, 0xca, 0xff,
 		SDP_DES_SIZE8, 0x11,
 			SDP_UINT16, 0x0, 0x4, /* Protocol descriptor list attribute */
 			SDP_DES_SIZE8, 0xc, 
@@ -99,13 +90,12 @@ static const u8_t spp_service_record[] =
 					SDP_UUID16, 0x1, 0x0, /*L2CAP*/
 				SDP_DES_SIZE8, 0x5,
 					SDP_UUID16, 0x0, 0x3, /*RFCOMM*/
-					SDP_UINT8, 0x0, /*RFCOMM channel*/
+					SDP_UINT8, 0x1, /*RFCOMM channel*/
 		SDP_DES_SIZE8, 0x8,
 			SDP_UINT16, 0x0, 0x5, /*Browse group list */
 			SDP_DES_SIZE8, 0x3,
 				SDP_UUID16, 0x10, 0x02, /*PublicBrowseGroup*/
 };
-#endif
 
 /* 
  * bt_spp_start():
@@ -463,34 +453,34 @@ err_t bt_spp_init(void)
 	struct sdp_record *record;
 
 	if((l2cappcb = l2cap_new()) == NULL) {
-		LWIP_DEBUGF(BT_SPP_DEBUG, ("lap_init: Could not alloc L2CAP PCB for SDP_PSM\n"));
+		LWIP_DEBUGF(BT_SPP_DEBUG, ("bt_spp_init: Could not alloc L2CAP PCB for SDP_PSM\n"));
 		return ERR_MEM;
 	}
 	l2cap_connect_ind(l2cappcb, SDP_PSM, bt_connect_ind);
 
 	if((l2cappcb = l2cap_new()) == NULL) {
-		LWIP_DEBUGF(BT_SPP_DEBUG, ("lap_init: Could not alloc L2CAP PCB for RFCOMM_PSM\n"));
+		LWIP_DEBUGF(BT_SPP_DEBUG, ("bt_spp_init: Could not alloc L2CAP PCB for RFCOMM_PSM\n"));
 		return ERR_MEM;
 	}
 	l2cap_connect_ind(l2cappcb, RFCOMM_PSM, bt_connect_ind);
 
-	LWIP_DEBUGF(RFCOMM_DEBUG, ("lap_init: Allocate RFCOMM PCB for CN 0******************************\n"));
+	LWIP_DEBUGF(RFCOMM_DEBUG, ("bt_spp_init: Allocate RFCOMM PCB for CN 0\n"));
 	if((rfcommpcb = rfcomm_new(NULL)) == NULL) {
-		LWIP_DEBUGF(BT_SPP_DEBUG, ("lap_init: Could not alloc RFCOMM PCB for channel 0\n"));
+		LWIP_DEBUGF(BT_SPP_DEBUG, ("bt_spp_init: Could not alloc RFCOMM PCB for channel 0\n"));
 		return ERR_MEM;
 	}
 	rfcomm_listen(rfcommpcb, 0, rfcomm_accept);
-/*
-	LWIP_DEBUGF(RFCOMM_DEBUG, ("lap_init: Allocate RFCOMM PCB for CN 1******************************\n"));
+
+	LWIP_DEBUGF(RFCOMM_DEBUG, ("lap_init: Allocate RFCOMM PCB for CN 1\n"));
 	if((rfcommpcb = rfcomm_new(NULL)) == NULL) {
 		LWIP_DEBUGF(BT_SPP_DEBUG, ("lap_init: Could not alloc RFCOMM PCB for channel 1\n"));
 		return ERR_MEM;
 	}
 	rfcomm_listen(rfcommpcb, 1, rfcomm_accept);
-	*/
+	
 
 	if((record = sdp_record_new((u8_t *)spp_service_record, sizeof(spp_service_record))) == NULL) {
-		LWIP_DEBUGF(BT_SPP_DEBUG, ("lap_init: Could not alloc SDP record\n"));
+		LWIP_DEBUGF(BT_SPP_DEBUG, ("bt_spp_init: Could not alloc SDP record\n"));
 		return ERR_MEM;
 	} else {
 		sdp_register_service(record);

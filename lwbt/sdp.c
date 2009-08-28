@@ -166,6 +166,7 @@ u8_t sdp_pattern_search(struct sdp_record *record, u8_t size, struct pbuf *p)
 	u8_t i, j;
 	u8_t *payload = (u8_t *)p->payload;
 
+	//TODO actually parse the request instead of going over each byte
 	for(i = 0; i < size; ++i) {
 		if(SDP_DE_TYPE(payload[i]) == SDP_DE_TYPE_UUID)  {
 			switch(SDP_DE_SIZE(payload[i])) {
@@ -213,7 +214,7 @@ struct pbuf * sdp_attribute_search(u16_t max_attribl_bc, struct pbuf *p, struct 
 	u16_t attribl_bc = 0; /* Byte count of the sevice attributes */
 	u32_t hdl = htonl(record->hdl);
 
-	if(SDP_DE_TYPE(payload[0]) == SDP_DE_TYPE_DES  && 
+	if(SDP_DE_TYPE(payload[0]) == SDP_DE_TYPE_DES &&
 			SDP_DE_SIZE(payload[0]) == SDP_DE_SIZE_N1) {
 		/* Get size of attribute ID list */
 		size = payload[1]; //TODO: correct to assume only one size byte in remote request? probably  
@@ -221,12 +222,12 @@ struct pbuf * sdp_attribute_search(u16_t max_attribl_bc, struct pbuf *p, struct 
 		while(i < size) {
 			/* Check if this is an attribute ID or a range of attribute IDs */
 			if(payload[2+i] == (SDP_DE_TYPE_UINT  | SDP_DE_SIZE_16)) {
-				attr_id = *((u16_t *)(payload+3+i));
+				attr_id = ntohs(*((u16_t *)(payload+3+i)));
 				attr_id2 = attr_id; /* For the range to cover this attribute ID only */
 				i += 3;
 			} else if(payload[2+i] == (SDP_DE_TYPE_UINT | SDP_DE_SIZE_32)) {
-				attr_id = *((u16_t *)(payload+3+i));
-				attr_id2 = *((u16_t *)(payload+5+i));
+				attr_id = ntohs(*((u16_t *)(payload+3+i)));
+				attr_id2 = ntohs(*((u16_t *)(payload+5+i)));
 				i += 5;
 			} else {
 				/* ERROR: Invalid req syntax */
@@ -238,9 +239,11 @@ struct pbuf * sdp_attribute_search(u16_t max_attribl_bc, struct pbuf *p, struct 
 			for(j = 0; j < record->len; ++j) {
 				if(SDP_DE_TYPE(record->record_de_list[j]) == SDP_DE_TYPE_DES) {
 					if(record->record_de_list[j + 2] == (SDP_DE_TYPE_UINT | SDP_DE_SIZE_16)) {
-						LWIP_DEBUGF(SDP_DEBUG, ("sdp_attribute_search: looking at rec %04x\n", *((u16_t *)(record->record_de_list + j + 3))));
-						if(*((u16_t *)(record->record_de_list + j + 3)) >= attr_id && 
-								*((u16_t *)(record->record_de_list + j + 3)) <= attr_id2) {
+						u16_t rec_id = ntohs(*((u16_t *)(record->record_de_list + j + 3)));
+
+						LWIP_DEBUGF(SDP_DEBUG, ("sdp_attribute_search: looking at rec %04x\n", rec_id));
+						
+						if(rec_id >= attr_id && rec_id <= attr_id2) {
 							if(attribl_bc +  record->record_de_list[j + 1] + 2 > max_attribl_bc) {
 								/* Abort attribute search since attribute list byte count must not 
 								   exceed max attribute byte count in req */
@@ -257,9 +260,9 @@ struct pbuf * sdp_attribute_search(u16_t max_attribl_bc, struct pbuf *p, struct 
 							memcpy((u8_t *)r->payload, record->record_de_list + j + 2, r->len);
 							attribl_bc += r->len;
 
-							/* If request included a service record handle attribute id, add the correct id to the 
-							   response */
-							if(*((u16_t *)(record->record_de_list + j + 3)) == 0) {
+							/* If request included a service record handle attribute id, add the correct
+							 * id to the response */
+							if(rec_id == 0x0000) {
 								memcpy(((u8_t *)r->payload) + 4, &hdl, 4);
 							}
 
@@ -765,7 +768,7 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 	if(q->next != NULL ) {
 		*((u16_t *)(((u8_t *)q->payload) + SDP_PDUHDR_LEN)) = htons(q->tot_len - SDP_PDUHDR_LEN - 2);
 
-		((u8_t *)q->next->payload)[0] = 0x35;
+		((u8_t *)q->next->payload)[0] = SDP_DES_SIZE8;
 		((u8_t *)q->next->payload)[1] = q->tot_len - SDP_PDUHDR_LEN - 4;
 	} else {
 		*((u16_t *)(((u8_t *)q->payload) + SDP_PDUHDR_LEN)) = 0;
@@ -784,13 +787,15 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 	/* Add paramenter length to header */
 	rsphdr->len = htons(q->tot_len - SDP_PDUHDR_LEN);
 
+#if SDP_DEBUG == LWIP_DBG_ON
 	for(r = q; r != NULL; r = r->next) {
 		u8_t i;
 		for(i = 0; i < r->len; ++i) {
 			LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: 0x%02x\n", ((u8_t *)r->payload)[i]));
 		}
-		LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: STOP\n"));
+		LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: next pbuf\n"));
 	}
+#endif
 
 	return l2ca_datawrite(pcb, q);
 }

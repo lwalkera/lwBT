@@ -1171,8 +1171,8 @@ err_t rfcomm_input(void *arg, struct l2cap_pcb *l2cappcb, struct pbuf *p, err_t 
 					}
 				}
 				if(lpcb != NULL) {
-					/* Found a listening pcb with a matching server channel number, now initiate a new active PCB 
-					   with default configuration */
+					/* Found a listening pcb with a matching server channel number, now initiate a
+					 * new active PCB with default configuration */
 					LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_input: Allocate RFCOMM PCB for CN %d******************************\n", lpcb->cn));
 					if((pcb = rfcomm_new(l2cappcb)) == NULL) {
 						/* No memory to allocate PCB. Refuse connection attempt */

@@ -18,7 +18,7 @@ typedef int32_t		s32_t;
 #define S32_F		"08x"
 typedef int			mem_ptr_t;
 
-#define PACK_STRUCT_STRUCT attribute((__packed__))
+#define PACK_STRUCT_STRUCT __attribute__((__packed__))
 
 #define LWIP_PLATFORM_DIAG(x) printf x
 #define LWIP_PLATFORM_ASSERT(x) printf(x)

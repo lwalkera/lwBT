@@ -98,13 +98,13 @@ err_t sdp_recv(void *arg, struct l2cap_pcb *pcb, struct pbuf *p, err_t err);
 #define SDP_DE_SIZE_N2	0x6 /* Data size is in next 2 bytes */
 #define SDP_DE_SIZE_N4	0x7 /* Data size is in next 4 bytes */
 
-#define SDP_DES_SIZE8	SDP_DE_TYPE_DES  | SDP_DE_SIZE_N1
-#define SDP_DES_SIZE16	SDP_DE_TYPE_DES  | SDP_DE_SIZE_N2
-#define SDP_UINT8		SDP_DE_TYPE_UINT | SDP_DE_SIZE_8
-#define SDP_UINT16		SDP_DE_TYPE_UINT | SDP_DE_SIZE_16
-#define SDP_UINT32		SDP_DE_TYPE_UINT | SDP_DE_SIZE_32
-#define SDP_UUID16		SDP_DE_TYPE_UUID | SDP_DE_SIZE_16
-#define SDP_UUID128		SDP_DE_TYPE_UUID | SDP_DE_SIZE_128
+#define SDP_DES_SIZE8	(SDP_DE_TYPE_DES  | SDP_DE_SIZE_N1)
+#define SDP_DES_SIZE16	(SDP_DE_TYPE_DES  | SDP_DE_SIZE_N2)
+#define SDP_UINT8		(SDP_DE_TYPE_UINT | SDP_DE_SIZE_8)
+#define SDP_UINT16		(SDP_DE_TYPE_UINT | SDP_DE_SIZE_16)
+#define SDP_UINT32		(SDP_DE_TYPE_UINT | SDP_DE_SIZE_32)
+#define SDP_UUID16		(SDP_DE_TYPE_UUID | SDP_DE_SIZE_16)
+#define SDP_UUID128		(SDP_DE_TYPE_UUID | SDP_DE_SIZE_128)
 
 /* PDU identifiers */
 #define SDP_ERR_PDU 0x01
@@ -128,7 +128,7 @@ struct sdp_hdr {
   u8_t pdu;
   u16_t id;
   u16_t len;
-};
+} PACK_STRUCT_STRUCT;
 
 struct sdp_record {
   struct sdp_record *next; /* For the linked list */
