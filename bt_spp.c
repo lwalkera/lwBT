@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003 EISLAB, Lulea University of Technology.
+ * Copyright (c) 2009 PASCO scientific
  * All rights reserved. 
  * 
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -26,7 +26,8 @@
  *
  * This file is part of the lwBT Bluetooth stack.
  * 
- * Author: Conny Ohult <conny@sm.luth.se>
+ * Author: Laine Walker-Avina <lwalkera@ieee.org>
+ * Based on code from: Conny Ohult <conny@sm.luth.se>
  *
  */
 
@@ -471,13 +472,12 @@ err_t bt_spp_init(void)
 	}
 	rfcomm_listen(rfcommpcb, 0, rfcomm_accept);
 
-	LWIP_DEBUGF(RFCOMM_DEBUG, ("lap_init: Allocate RFCOMM PCB for CN 1\n"));
+	LWIP_DEBUGF(RFCOMM_DEBUG, ("bt_spp_init: Allocate RFCOMM PCB for CN 1\n"));
 	if((rfcommpcb = rfcomm_new(NULL)) == NULL) {
 		LWIP_DEBUGF(BT_SPP_DEBUG, ("lap_init: Could not alloc RFCOMM PCB for channel 1\n"));
 		return ERR_MEM;
 	}
 	rfcomm_listen(rfcommpcb, 1, rfcomm_accept);
-	
 
 	if((record = sdp_record_new((u8_t *)spp_service_record, sizeof(spp_service_record))) == NULL) {
 		LWIP_DEBUGF(BT_SPP_DEBUG, ("bt_spp_init: Could not alloc SDP record\n"));
