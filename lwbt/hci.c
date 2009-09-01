@@ -663,6 +663,11 @@ void hci_event_input(struct pbuf *p)
 		case HCI_LINK_KEY_NOTIFICATION:
 			LWIP_DEBUGF(HCI_EV_DEBUG, ("hci_event_input: Link key notification\n"));
 			bdaddr = (void *)((u8_t *)p->payload); /* Get the Bluetooth address */
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("bdaddr: %02x:%02x:%02x:%02x:%02x:%02x\n",
+						((u8_t *)p->payload)[5], ((u8_t *)p->payload)[4], ((u8_t *)p->payload)[3],
+						((u8_t *)p->payload)[2],  ((u8_t *)p->payload)[1],  ((u8_t *)p->payload)[0]
+						));
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("key_type: %d\n", ((u8_t *)p->payload)[16+6]));
 
 			HCI_EVENT_LINK_KEY_NOT(pcb, bdaddr, ((u8_t *)p->payload) + 6, ret); /* Notify application.*/
 			break;
@@ -775,6 +780,9 @@ err_t hci_disconnect(struct bd_addr *bdaddr, u8_t reason)
 err_t hci_reject_connection_request(struct bd_addr *bdaddr, u8_t reason)
 {
 	struct pbuf *p;
+	LWIP_DEBUGF(HCI_DEBUG, ("hci_reject_connection_request: reject from %02x:%02x:%02x:%02x:%02x:%02x\n",
+		bdaddr->addr[5], bdaddr->addr[4], bdaddr->addr[3],
+		bdaddr->addr[2], bdaddr->addr[1], bdaddr->addr[0] ));
 	if((p = pbuf_alloc(PBUF_RAW, HCI_REJECT_CONN_REQ_PLEN, PBUF_RAM)) == NULL) {
 		LWIP_DEBUGF(HCI_DEBUG, ("hci_reject_connection_request: Could not allocate memory for pbuf\n"));
 		return ERR_MEM;

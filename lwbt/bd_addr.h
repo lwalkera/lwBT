@@ -62,7 +62,7 @@ struct bd_addr {
 				   (addr1)->addr[4] = (addr2)->addr[4]; \
 				   (addr1)->addr[5] = (addr2)->addr[5]; }while(0)
 
-#define bd_addr_debug_print(bdaddr) LWIP_DEBUGF(LWBT_DEBUG, ("0x%x:0x%x:0x%x:0x%x:0x%x:0x%x\n", \
+#define bd_addr_debug_print(bdaddr) LWIP_DEBUGF(LWBT_DEBUG, ("%02x:%02x:%02x:%02x:%02x:%02x\n", \
 		    (bdaddr)->addr[0], \
 		    (bdaddr)->addr[1], \
 		    (bdaddr)->addr[2], \
