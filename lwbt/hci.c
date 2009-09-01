@@ -655,14 +655,24 @@ void hci_event_input(struct pbuf *p)
 			LWIP_DEBUGF(HCI_EV_DEBUG, ("LMP max slots: 0x%x\n", ((u8_t *)p->payload)[2]));
 			break; 
 		case HCI_PIN_CODE_REQUEST:
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("hci_event_input: Pin request\n"));
 			bdaddr = (void *)((u8_t *)p->payload); /* Get the Bluetooth address */
 			HCI_EVENT_PIN_REQ(pcb, bdaddr, ret); /* Notify application. If event is not registered, 
 													send a negative reply */
 			break;
 		case HCI_LINK_KEY_NOTIFICATION:
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("hci_event_input: Link key notification\n"));
 			bdaddr = (void *)((u8_t *)p->payload); /* Get the Bluetooth address */
 
 			HCI_EVENT_LINK_KEY_NOT(pcb, bdaddr, ((u8_t *)p->payload) + 6, ret); /* Notify application.*/
+			break;
+		case HCI_PAGE_SCAN_REP_MODE_CHANGE:
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("hci_event_input: Page Scan Repetition Mode changed\n"));
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("bdaddr: %02x:%02x:%02x:%02x:%02x:%02x\n",
+						((u8_t *)p->payload)[5], ((u8_t *)p->payload)[4], ((u8_t *)p->payload)[3],
+						((u8_t *)p->payload)[2],  ((u8_t *)p->payload)[1],  ((u8_t *)p->payload)[0]
+						));
+			LWIP_DEBUGF(HCI_EV_DEBUG, ("rep mode: %d\n", ((u8_t *)p->payload)[6]));
 			break;
 		default:
 			LWIP_DEBUGF(HCI_EV_DEBUG, ("hci_event_input: Undefined event code 0x%x\n", evhdr->code));

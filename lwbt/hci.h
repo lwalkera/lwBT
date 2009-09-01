@@ -172,6 +172,7 @@ u16_t lp_pdu_maxsize(void);
 #define HCI_LINK_KEY_NOTIFICATION 0x18
 #define HCI_DATA_BUFFER_OVERFLOW 0x1A
 #define HCI_MAX_SLOTS_CHANGE 0x1B
+#define HCI_PAGE_SCAN_REP_MODE_CHANGE 0x20
 
 /* Success code */
 #define HCI_SUCCESS 0x00

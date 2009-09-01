@@ -393,23 +393,11 @@ err_t spp_recv(void *arg, struct rfcomm_pcb *pcb, struct pbuf *p, err_t err)
 
 err_t rfcomm_accept(void *arg, struct rfcomm_pcb *pcb, err_t err) 
 {
-	//struct ppp_pcb *ppppcb;
-	//struct netif *netif;
-
 	LWIP_DEBUGF(BT_SPP_DEBUG, ("rfcomm_accept: CN = %d\n", rfcomm_cn(pcb)));
 
 	rfcomm_disc(pcb, rfcomm_disconnected);
 	if(pcb->cn != 0) {
-		//if((ppppcb = ppp_new(pcb)) == NULL) {
-		//	LWIP_DEBUGF(BT_SPP_DEBUG, ("rfcomm_accept: Could not allocate a PPP PCB\n"));
-		//	return ERR_MEM;
-		//}
-		//ppp_disconnected(ppppcb, ppp_is_disconnected);
-		//ppp_listen(ppppcb, ppp_accept);
-
-		//netif = nat_netif_add(NULL, bluetoothif_init);
-		//ppp_netif(ppppcb, netif); 
-
+		//set recv callback
 		rfcomm_recv(pcb, spp_recv);
 	}
 	return ERR_OK;
@@ -937,9 +925,10 @@ err_t read_bdaddr_complete(void *arg, struct bd_addr *bdaddr)
  * host controller. Waits for a connection from remote device once connected.
  *
  * Event Sequence:
- * HCI Reset -> Read Buf Size -> Read BDAddr -> Set Ev Filter ->
- * _/-> Write CoD -> Cng Local Name -> Write Pg Timeout -> Inq -> Complete
- *  \-> Scan Enable -> Complete
+ * HCI Reset -> Read Buf Size -> Read BDAddr -> Set Ev Filter -+
+ * +-----------------------------------------------------------+
+ * |_/-> Write CoD -> Cng Local Name -> Write Pg Timeout -> Inq -> Complete
+ *   \-> Scan Enable -> Complete
  */
 err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t result)
 {
@@ -991,7 +980,7 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 				case HCI_WRITE_SCAN_ENABLE:
 					if(result == HCI_SUCCESS) {
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("successful HCI_WRITE_SCAN_ENABLE.\n")); 
-						hci_cmd_complete(NULL); /* Initialization done, don't come back */
+						//hci_cmd_complete(NULL); /* Initialization done, don't come back */
 					} else {
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("Unsuccessful HCI_WRITE_SCAN_ENABLE.\n"));
 						return ERR_CONN;
@@ -1034,11 +1023,11 @@ err_t command_complete(void *arg, struct hci_pcb *pcb, u8_t ogf, u8_t ocf, u8_t 
 				case HCI_WRITE_PAGE_TIMEOUT:
 					if(result == HCI_SUCCESS) {
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("successful HCI_WRITE_PAGE_TIMEOUT.\n"));
-						hci_cmd_complete(NULL); /* Initialization done, don't come back */
+						//hci_cmd_complete(NULL); /* Initialization done, don't come back */
 						hci_connection_complete(acl_conn_complete);
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("Initialization done.\n"));
-						LWIP_DEBUGF(BT_SPP_DEBUG, ("Discover other Bluetooth devices.\n"));
-						hci_inquiry(0x009E8B33, 0x04, 0x01, inquiry_complete); //FAILED????
+						//LWIP_DEBUGF(BT_SPP_DEBUG, ("Discover other Bluetooth devices.\n"));
+						//hci_inquiry(0x009E8B33, 0x04, 0x01, inquiry_complete); //FAILED????
 					} else {
 						LWIP_DEBUGF(BT_SPP_DEBUG, ("Unsuccessful HCI_WRITE_PAGE_TIMEOUT.\n"));
 						return ERR_CONN;
