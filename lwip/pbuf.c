@@ -573,7 +573,7 @@ pbuf_cat(struct pbuf *h, struct pbuf *t)
 	struct pbuf *p;
 
 	LWIP_ERROR("(h != NULL) && (t != NULL) (programmer violates API)",
-			((h != NULL) && (t != NULL)), return;);
+			((h != NULL) && (t != NULL)), goto errout;);
 
 	/* proceed to last pbuf of chain */
 	for (p = h; p->next != NULL; p = p->next) {
@@ -590,6 +590,11 @@ pbuf_cat(struct pbuf *h, struct pbuf *t)
 	/* p->next now references t, but the caller will drop its reference to t,
 	 * so netto there is no change to the reference count of t.
 	 */
+	return;
+
+	errout:
+	printf("\n");
+	return;
 }
 
 /**

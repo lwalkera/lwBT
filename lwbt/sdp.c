@@ -747,7 +747,11 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 			r = sdp_attribute_search(max_attribl_bc, p, record);
 			if(r != NULL) {
 				if(q->next == NULL) {
-					s = pbuf_alloc(PBUF_RAW, 2, PBUF_RAM);
+					if((s = pbuf_alloc(PBUF_RAW, 2, PBUF_RAM)) == NULL)
+					{
+						LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: couldn't alloc pbuf"));
+						return ERR_MEM;
+					}
 					/* Chain attribute id list for service to response packet */
 					pbuf_chain(q, s);
 					pbuf_free(s);
@@ -777,6 +781,7 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 	/* Add continuation state to packet */
 	if((r = pbuf_alloc(PBUF_RAW, 1, PBUF_RAM)) == NULL) {
 		LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_search_attrib_rsp: error allocating new pbuf\n"));
+		return ERR_MEM;
 		//TODO: ERROR
 	} else {
 		((u8_t *)r->payload)[0] = 0x00; //TODO: Is this correct?
