@@ -682,7 +682,7 @@ err_t sdp_service_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struct sdp_h
 			u16_t i;
 			for(r = q; r != NULL; r = r->next) {
 				for(i = 0; i < r->len; ++i) {
-					LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_attrib_rsp: 0x%x\n", ((u8_t *)r->payload)[i]));
+					LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_attrib_rsp: 0x%02x\n", ((u8_t *)r->payload)[i]));
 				}
 				LWIP_DEBUGF(SDP_DEBUG, ("sdp_service_attrib_rsp: STOP\n"));
 			}
@@ -713,6 +713,8 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 	struct pbuf *r = NULL; /* tmp buffer */
 	struct pbuf *s = NULL; /* tmp buffer */
 
+	err_t ret;
+
 	u16_t max_attribl_bc = 0;
 	u8_t size = 0;
 
@@ -733,7 +735,7 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 	}
 
 	/* Allocate header + attribute list count */
-	q  = pbuf_alloc(PBUF_RAW, SDP_PDUHDR_LEN + 2, PBUF_RAM);
+	q = pbuf_alloc(PBUF_RAW, SDP_PDUHDR_LEN + 2, PBUF_RAM);
 
 	rsphdr = q->payload;
 	rsphdr->pdu = SDP_SSAR_PDU;
@@ -802,7 +804,9 @@ err_t sdp_service_search_attrib_rsp(struct l2cap_pcb *pcb, struct pbuf *p, struc
 	}
 #endif
 
-	return l2ca_datawrite(pcb, q);
+	ret = l2ca_datawrite(pcb, q);
+	pbuf_free(q);
+	return ret; 
 }
 
 /* 
