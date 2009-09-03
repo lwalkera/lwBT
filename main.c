@@ -92,7 +92,10 @@ int main(int argc, char **argv)
 	gettimeofday(&tcptv, &tz); /* Initialize TCP timer (TCP_TMR_INTERVAL) */
 
 	while(1) {
-		phybusif_input(cb); /* Check for input */
+		if( phybusif_input(cb) != ERR_OK) /* Check for input */
+		{
+			exit(-1);
+		}
 
 		gettimeofday(&now, &tz); /* Get current time */
 

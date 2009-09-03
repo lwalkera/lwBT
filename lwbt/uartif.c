@@ -69,6 +69,7 @@ void phybusif_init(const char * port)
 	int i;
 
 	/* Open the device to be non-blocking (read will return immediatly) */
+	printf("opening port \"%s\"\n", port);
 	fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
 	if (fd <0) {
 		perror(port);
@@ -187,6 +188,7 @@ err_t phybusif_input(struct phybusif_cb *cb)
 					} else {
 						LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_reset: Forward Empty ACL packet to higher layer\n"));
 						hci_acl_input(cb->p); /* Handle incoming ACL data */
+						pbuf_free(cb->p);
 						phybusif_reset(cb);
 						return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
 					}
@@ -208,6 +210,7 @@ err_t phybusif_input(struct phybusif_cb *cb)
 				if(cb->tot_recvd == cb->aclhdr->len) {
 					LWIP_DEBUGF(PHYBUSIF_DEBUG, ("phybusif_input: Forward ACL packet to higher layer\n"));
 					hci_acl_input(cb->p); /* Handle incoming ACL data */
+					pbuf_free(cb->p);
 					phybusif_reset(cb);
 					return ERR_OK; /* Since there most likley won't be any more data in the input buffer */
 				}
@@ -241,6 +244,7 @@ void phybusif_output(struct pbuf *p, u16_t len)
 				if(++bailout == 0xfff)
 				{
 					perror("Failed to send byte");
+					exit(-1);
 					break;
 				}
 

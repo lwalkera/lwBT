@@ -372,6 +372,8 @@ err_t spp_recv(void *arg, struct rfcomm_pcb *pcb, struct pbuf *p, err_t err)
 	LWIP_DEBUGF(BT_SPP_DEBUG, ("spp_recv: p->len == %d p->tot_len == %d\n", p->len, p->tot_len));
 	if(arg != NULL) {
 		q = pbuf_alloc(PBUF_RAW, p->len + ((struct pbuf *)arg)->len, PBUF_RAM);
+		LWIP_ERROR("couldn't alloc pbuf", q == NULL, return ERR_MEM);
+
 		memcpy((u8_t *)q->payload, (u8_t *)((struct pbuf *)arg)->payload, ((struct pbuf *)arg)->len);
 		memcpy(((u8_t *)q->payload) + ((struct pbuf *)arg)->len, (u8_t *)p->payload, p->len);
 		pbuf_free((struct pbuf *)arg);

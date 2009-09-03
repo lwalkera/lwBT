@@ -61,7 +61,7 @@
 #define LWIP_DBG_HALT          0x08U
 
 #ifndef LWIP_NOASSERT
-#define LWIP_ASSERT(x,y) do { if(!(y)) LWIP_PLATFORM_ASSERT(x); } while(0)
+#define LWIP_ASSERT(x,y) do { if(!(y)){ LWIP_PLATFORM_ASSERT(x); }} while(0)
 #else  /* LWIP_NOASSERT */
 #define LWIP_ASSERT(x,y) 
 #endif /* LWIP_NOASSERT */
