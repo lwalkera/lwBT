@@ -644,11 +644,11 @@ err_t rfcomm_uih(struct rfcomm_pcb *pcb, u8_t cn, struct pbuf *q)
 	ret = l2ca_datawrite(pcb->l2cappcb, p);
 
 	/* Dealloc the RFCOMM header. Lower layers will handle rest of packet */
-	if(q != NULL) {
-		pbuf_dechain(p); /* Have q point to information + FCS */
+	pbuf_free(p);
+	if(q) {
+		//pbuf_dechain(p); /* Have q point to information + FCS */
 		pbuf_realloc(q, q->tot_len-1); /* Remove FCS from packet */
 	}
-	pbuf_free(p);
 
 	return ret;
 }
@@ -754,11 +754,11 @@ err_t rfcomm_uih_credits(struct rfcomm_pcb *pcb, u8_t credits, struct pbuf *q)
 	ret = l2ca_datawrite(pcb->l2cappcb, p);
 
 	/* Free RFCOMM header. Higher layers will handle rest of packet */
-	if(q != NULL) {
-		pbuf_dechain(p);
+	pbuf_free(p);
+	if(q) {
+		//pbuf_dechain(p);
 		pbuf_realloc(q, q->tot_len-1); /* Remove FCS from packet */
 	}
-	pbuf_free(p);
 
 	return ret;
 }
@@ -852,7 +852,7 @@ void rfcomm_process_msg(struct rfcomm_pcb *pcb, struct rfcomm_hdr *rfcommhdr, st
 				/* Use negotiated settings that may have changed from the default ones */
 				if((pnreq->i_cl >> 4) == 0xE) {
 					tpcb->cl = 0xF; /* Credit based flow control */
-					tpcb->k = pnreq->k; /* Inital credit value */
+					tpcb->k = pnreq->k==0?7:pnreq->k; /* Inital credit value */
 					LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_process_msg: RFCOMM_PN_RSP. tpcb->k = %d\n", tpcb->k));
 					LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_process_msg: Credit based flow control is used for outgoing packets 0x%x %d %d\n", (pnreq->i_cl >> 4), pnreq->k, pnreq->n));
 				} else {
@@ -994,7 +994,11 @@ void rfcomm_process_msg(struct rfcomm_pcb *pcb, struct rfcomm_hdr *rfcommhdr, st
 				rfcomm_uih(pcb, 0, p);
 			} else if(cmdhdr->len == 1) {
 				/* RPN command was a request for the link's parameters */
-				q = pbuf_alloc(PBUF_RAW, RFCOMM_RPNMSG_LEN+RFCOMM_MSGHDR_LEN, PBUF_RAM);
+				if((q = pbuf_alloc(PBUF_RAW, RFCOMM_RPNMSG_LEN+RFCOMM_MSGHDR_LEN, PBUF_RAM)) == NULL)
+				{
+					LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_process_msg: Could not allocate memory at line: %d\n", __LINE__ - 1));
+					break;
+				}
 				rsphdr = q->payload;
 				rsphdr->type = cmdhdr->type & 0xBF; /* Set C/R to response */
 				rsphdr->len = RFCOMM_RPNMSG_LEN;
@@ -1042,7 +1046,11 @@ void rfcomm_process_msg(struct rfcomm_pcb *pcb, struct rfcomm_hdr *rfcommhdr, st
 			break;
 		default:
 			/* Send NSC response */
-			q = pbuf_alloc(PBUF_RAW, RFCOMM_MSGHDR_LEN, PBUF_RAM);
+			if ((q = pbuf_alloc(PBUF_RAW, RFCOMM_MSGHDR_LEN, PBUF_RAM)) == NULL)
+			{
+				LWIP_DEBUGF(RFCOMM_DEBUG, ("rfcomm_process_msg: Could not allocate memory at line: %d\n", __LINE__ - 1));
+				break;
+			}
 			rsphdr = q->payload; 
 			rsphdr->type = ((cmdhdr->type & 0x03) << 0) | (RFCOMM_NSC_RSP << 2);
 			rsphdr->len = 0;
